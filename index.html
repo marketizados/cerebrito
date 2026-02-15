@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cerebrito - Gestor de Tareas</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Configuración de Tailwind -->
     <script>
         tailwind.config = {
             theme: {
@@ -31,426 +35,1741 @@
             }
         }
     </script>
+
     <style>
-        :root { --color-primary: #ea580c; --color-primary-hover: #c2410c; --color-sidebar: #fff7ed; --color-header: #ea580c; --color-header-text: #ffffff; --color-bg: #ffffff; --color-text: #1f2937; --color-text-muted: #6b7280; --color-border: #fdba74; --color-item-bg: #ffffff; --color-item-hover: #f9fafb; --color-menu-bg: #ffffff; --color-menu-border: #f3f4f6; }
+        /* Definición de Variables CSS por defecto */
+        :root {
+            --color-primary: #ea580c;
+            --color-primary-hover: #c2410c;
+            --color-sidebar: #fff7ed;
+            --color-header: #ea580c;
+            --color-header-text: #ffffff;
+            --color-bg: #ffffff;
+            --color-text: #1f2937;
+            --color-text-muted: #6b7280;
+            --color-border: #fdba74;
+            --color-item-bg: #ffffff;
+            --color-item-hover: #f9fafb;
+            --color-menu-bg: #ffffff;
+            --color-menu-border: #f3f4f6;
+        }
+
+        /* Estilos personalizados */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(156, 163, 175, 0.5); border-radius: 20px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: rgba(107, 114, 128, 0.8); }
+        
         body { transition: background-color 0.3s ease, color 0.3s ease; }
+        aside, header, button, .task-item, #userMenu { transition: all 0.2s ease; }
+        
+        /* Animaciones */
         .fade-in { animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .login-slide-up { animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
-        @keyframes slideUp { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-20px); opacity: 0; visibility: hidden; } }
+
+        /* Animación Temporizador Finalizado */
+        @keyframes pulse-finish {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 20px rgba(34, 197, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .timer-finished {
+            animation: pulse-finish 2s infinite;
+            background: linear-gradient(to right, #ecfccb, #dcfce7) !important;
+            border-color: #86efac !important;
+        }
+
+        /* Toast Notification */
         #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         .toast { background: white; border-left: 4px solid var(--color-primary); padding: 12px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 12px; transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: auto; min-width: 280px; border: 1px solid rgba(0,0,0,0.05); }
         .toast.show { transform: translateX(0); }
+
+        /* Color Picker Styles */
         .color-option { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
         .color-option:hover { transform: scale(1.2); }
         .color-option.selected { border-color: #333; transform: scale(1.1); }
+
+        /* Mobile Sidebar Transition */
         .sidebar-mobile-closed { transform: translateX(-100%); }
         .sidebar-mobile-open { transform: translateX(0); }
+        
+        /* Drag & Drop Styles */
+        .cursor-move { cursor: grab; }
+        .cursor-move:active { cursor: grabbing; }
+
+        /* Utility classes for dynamic coloring overrides */
+        .text-brand-text { color: var(--color-text); }
+        .text-brand-muted { color: var(--color-text-muted); }
+        .bg-brand-item { background-color: var(--color-item-bg); }
+        .hover\:bg-brand-item-hover:hover { background-color: var(--color-item-hover); }
     </style>
 </head>
-<body class="h-screen w-screen overflow-hidden font-sans text-brand-text bg-brand-bg relative">
+<body class="h-screen w-screen overflow-hidden font-sans text-brand-text bg-brand-bg flex">
 
-    <!-- LOGIN -->
-    <div id="loginScreen" class="absolute inset-0 z-50 bg-[#fff7ed] flex items-center justify-center transition-all duration-500">
-        <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-md mx-4 text-center border border-orange-100">
-            <div class="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6"><span class="text-4xl">🧠</span></div>
-            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Cerebrito</h1>
-            <p class="text-gray-500 mb-8">Gestión de tareas profesional</p>
-            <div id="loginStep1">
-                <input type="email" id="loginEmail" placeholder="Tu correo electrónico" class="w-full px-5 py-4 rounded-xl border border-gray-200 bg-gray-50 mb-4 text-center text-lg">
-                <button onclick="requestLoginCode()" class="w-full py-4 bg-orange-600 text-white rounded-xl font-bold text-lg hover:bg-orange-700 transition-all shadow-lg active:scale-95">Enviar Código</button>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Hidden File Input for Avatar -->
+    <input type="file" id="avatarUploadInput" class="hidden" accept="image/*" onchange="handleAvatarFile(this)">
+
+    <!-- Mobile Overlay -->
+    <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="w-72 h-full flex-shrink-0 border-r border-brand-border flex flex-col pt-6 bg-brand-sidebar z-30 shadow-xl fixed lg:relative transition-transform duration-300 sidebar-mobile-closed lg:transform-none lg:translate-x-0">
+        <div class="px-6 mb-6 lg:hidden flex justify-between items-center">
+             <span class="font-extrabold text-2xl tracking-tight text-brand-primary">Cerebrito</span>
+             <button onclick="toggleSidebar()" class="p-2 text-brand-muted hover:bg-black/5 rounded-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+
+        <div class="px-5 space-y-1.5" id="sidebar-nav">
+            <!-- Se llena con JS -->
+        </div>
+        
+        <div class="mt-8 px-5">
+            <div class="flex items-center justify-between text-brand-muted mb-3 px-2 group">
+                <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Prioridades</span>
+                <button onclick="openPriorityConfigModal()" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nueva Prioridad">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                </button>
             </div>
-            <div id="loginStep2" class="hidden animate-in fade-in">
-                <p class="text-sm text-gray-400 mb-4">Revisa tu correo</p>
-                <div class="flex justify-center gap-2 mb-6"><input type="text" id="otpCode" maxlength="6" class="w-full text-center text-3xl font-mono tracking-widest px-4 py-4 rounded-xl border-2 border-orange-100 bg-white" placeholder="000000"></div>
-                <button onclick="verifyLoginCode()" class="w-full py-4 bg-orange-600 text-white rounded-xl font-bold text-lg hover:bg-orange-700 shadow-lg active:scale-95">Entrar</button>
-                <button onclick="backToEmail()" class="mt-4 text-sm text-gray-400 underline">Cambiar correo</button>
+            <div class="space-y-1" id="sidebar-filters">
+                <!-- Se llena con JS -->
+            </div>
+        </div>
+
+        <div class="mt-8 px-5 flex-1 overflow-y-auto custom-scrollbar">
+            <div class="flex items-center justify-between text-brand-muted hover:text-brand-text mb-3 px-2 group cursor-pointer transition-colors">
+                <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Proyectos</span>
+                <button onclick="openModal('projectModal')" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nuevo Proyecto"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+            </div>
+            <div class="space-y-1" id="sidebar-projects">
+                <!-- Se llena con JS -->
+            </div>
+            <button onclick="openModal('projectModal')" class="flex items-center gap-3 px-3 py-2.5 text-sm text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 w-full rounded-xl transition-colors mt-4 group font-medium">
+                <div class="w-6 h-6 rounded-full border border-dashed border-brand-muted/50 flex items-center justify-center group-hover:border-brand-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i></div>
+                <span>Añadir proyecto</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full min-w-0 bg-brand-bg relative z-10 transition-colors">
+        
+        <!-- Header -->
+        <header id="main-header" class="h-16 flex items-center px-6 shrink-0 border-b border-brand-border z-30 bg-brand-header text-brand-header-text shadow-sm transition-colors">
+            <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-xl mr-4 transition-colors lg:hidden">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+
+            <!-- Brand Logo Text -->
+            <div class="font-extrabold text-2xl mr-8 hidden md:flex items-center gap-2 tracking-tight select-none">
+                <span>Cerebrito</span> <span class="text-2xl">🧠</span>
+            </div>
+
+            <div class="hidden sm:flex ml-2 max-w-xl relative flex-1">
+                <div class="transition-all rounded-xl h-10 flex items-center px-4 text-sm w-full bg-white/20 hover:bg-white/30 text-brand-header-text placeholder-white/80 shadow-inner focus-within:bg-white/40 focus-within:ring-2 focus-within:ring-white/20">
+                    <i data-lucide="search" class="w-4 h-4 mr-3 opacity-80"></i>
+                    <input type="text" id="searchInput" placeholder="Buscar tareas, notas, clientes..." class="bg-transparent border-none outline-none w-full placeholder-current opacity-100 font-medium" oninput="handleSearch(this.value)">
+                </div>
+            </div>
+
+            <div class="ml-auto flex items-center gap-4 relative">
+                <button onclick="openAddTaskModal()" class="p-2.5 hover:bg-white/10 rounded-xl transition-colors hidden sm:block" title="Añadir tarea rápida">
+                    <i data-lucide="plus" class="w-6 h-6"></i>
+                </button>
+                
+                <!-- Avatar / Menu Usuario -->
+                <div class="relative">
+                    <div onclick="toggleUserMenu()" class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-md cursor-pointer overflow-hidden ring-2 ring-white/40 transition-transform hover:scale-105 active:scale-95 bg-white text-brand-primary" id="userAvatarBtn">
+                        <img id="userAvatarImg" class="w-full h-full object-cover hidden" alt="Avatar">
+                        <span id="userAvatarInitials">YO</span>
+                    </div>
+                    
+                    <!-- Dropdown -->
+                    <div id="userMenu" class="hidden absolute right-0 top-14 w-72 bg-brand-menu rounded-2xl shadow-2xl border border-brand-menu-border z-50 overflow-hidden animate-in fade-in origin-top-right">
+                        <div class="p-4 border-b border-brand-menu-border bg-black/5">
+                            <h4 class="font-bold text-brand-text text-sm">Personalización</h4>
+                            <p class="text-xs text-brand-muted">Elige tu estilo</p>
+                        </div>
+                        <div class="p-3 grid grid-cols-2 gap-2" id="theme-selector">
+                            <!-- JS Fills this -->
+                        </div>
+                        <div class="p-2 border-t border-brand-menu-border mt-1 space-y-1">
+                            <button onclick="document.getElementById('avatarUploadInput').click()" class="w-full text-left px-3 py-2 text-sm font-medium text-brand-muted hover:bg-brand-item-hover rounded-lg flex items-center gap-2">
+                                <i data-lucide="image" class="w-4 h-4"></i> Cambiar Avatar
+                            </button>
+                            <button onclick="hardReset()" class="w-full text-left px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg flex items-center gap-2 transition-colors">
+                                <i data-lucide="trash" class="w-4 h-4"></i> Restablecer Datos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- View Title & Controls -->
+        <div class="px-6 sm:px-10 pt-8 pb-4 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between shrink-0 bg-brand-bg/95 backdrop-blur-sm z-20 gap-4" id="view-header">
+            <div class="flex items-center gap-3">
+                <h1 id="view-title" class="text-3xl font-extrabold text-brand-text tracking-tight">Bandeja de Entrada</h1>
+                <span id="view-badge" class="hidden text-xs font-bold px-2.5 py-1 bg-brand-primary/10 text-brand-primary rounded-lg mt-1"></span>
+            </div>
+            <!-- View Selectors -->
+            <div class="flex items-center gap-3 self-start sm:self-auto" id="view-controls">
+                <div class="flex bg-gray-100/80 border border-gray-200/50 rounded-xl p-1 gap-1 shadow-sm">
+                    <button onclick="setViewMode('list')" id="btn-list" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="list" class="w-4.5 h-4.5"></i></button>
+                    <button onclick="setViewMode('board')" id="btn-board" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="layout-grid" class="w-4.5 h-4.5"></i></button>
+                    <button onclick="setViewMode('calendar')" id="btn-calendar" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="calendar" class="w-4.5 h-4.5"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div id="content-area" class="flex-1 overflow-hidden flex flex-col relative bg-brand-bg transition-colors">
+            <!-- Dynamic Content -->
+            <div id="main-container" class="h-full overflow-y-auto custom-scrollbar px-4 sm:px-10 py-6 mx-auto w-full max-w-6xl pb-32">
+                <!-- Se llena con JS -->
+            </div>
+        </div>
+
+        <!-- Floating Action Button (Always Visible) -->
+        <div class="absolute bottom-8 right-8 z-40">
+             <button onclick="openAddTaskModal()" class="w-16 h-16 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/30 flex items-center justify-center hover:scale-105 transition-all hover:bg-brand-primary-hover active:scale-95 border-2 border-white/20">
+                <i data-lucide="plus" class="w-8 h-8"></i>
+             </button>
+        </div>
+
+    </main>
+
+    <!-- Task Modal (Create/Edit) -->
+    <div id="taskModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-xl mx-4 transform transition-all scale-100 animate-in fade-in zoom-in-95 border border-white/50">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-2xl font-bold text-gray-800 tracking-tight" id="taskModalTitle">Nueva Tarea</h3>
+                <button onclick="closeModal('taskModal')" class="text-gray-400 hover:text-gray-600 bg-gray-50 p-2 rounded-full hover:bg-gray-100 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <input type="text" id="newTaskInput" placeholder="¿Qué tienes en mente?" class="w-full text-xl font-medium outline-none mb-4 placeholder-gray-400 text-gray-800 bg-transparent border-b-2 border-transparent focus:border-brand-primary/20 pb-2 transition-colors">
+            <textarea id="newTaskDesc" placeholder="Añade detalles, notas..." class="w-full text-base resize-none outline-none text-gray-600 mb-6 h-28 bg-gray-50/50 p-4 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-primary/20 transition-all border border-gray-100 focus:border-brand-primary/20"></textarea>
+            
+            <!-- Assignee Selection -->
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Asignado a</label>
+                <select id="newTaskAssignee" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white">
+                    <option value="">Sin asignar</option>
+                    <!-- Filled by JS -->
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <div class="flex gap-2 w-full overflow-x-auto pb-2 scrollbar-hide">
+                    <input type="datetime-local" id="newTaskDate" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white shadow-sm cursor-pointer font-medium hover:bg-gray-50">
+                    <select id="newTaskPriority" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white shadow-sm cursor-pointer font-medium hover:bg-gray-50">
+                        <!-- Filled by JS -->
+                    </select>
+                    <select id="newTaskProject" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white shadow-sm cursor-pointer font-medium hover:bg-gray-50">
+                        <!-- Filled by JS -->
+                    </select>
+                </div>
+                <div class="flex gap-3 pt-4 border-t border-gray-100">
+                    <button onclick="closeModal('taskModal')" class="flex-1 px-5 py-3 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                    <button onclick="saveTask()" id="taskModalBtn" class="flex-1 px-6 py-3 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-lg shadow-brand-primary/30 transition-all transform active:scale-95 flex justify-center items-center gap-2">Añadir Tarea <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- APP -->
-    <div id="appContainer" class="h-full w-full flex hidden">
-        <div id="toast-container"></div>
-        <input type="file" id="avatarUploadInput" class="hidden" accept="image/*" onchange="handleAvatarFile(this)">
-        <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
-
-        <aside id="sidebar" class="w-72 h-full flex-shrink-0 border-r border-brand-border flex flex-col pt-6 bg-brand-sidebar z-30 shadow-xl fixed lg:relative transition-transform duration-300 sidebar-mobile-closed lg:transform-none lg:translate-x-0">
-            <div class="px-6 mb-6 lg:hidden flex justify-between items-center">
-                <span class="font-extrabold text-2xl tracking-tight text-brand-primary">Cerebrito</span>
-                <button onclick="toggleSidebar()" class="p-2 text-brand-muted hover:bg-black/5 rounded-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
-            </div>
-            <div class="px-5 space-y-1.5" id="sidebar-nav"></div>
-            <div class="mt-8 px-5">
-                <div class="flex items-center justify-between text-brand-muted mb-3 px-2 group">
-                    <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Prioridades</span>
-                    <button onclick="openPriorityConfigModal()" class="hover:bg-black/5 p-1 rounded-md transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-                </div>
-                <div class="space-y-1" id="sidebar-filters"></div>
-            </div>
-            <div class="mt-8 px-5 flex-1 overflow-y-auto custom-scrollbar">
-                <div class="flex items-center justify-between text-brand-muted hover:text-brand-text mb-3 px-2 group cursor-pointer transition-colors">
-                    <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Proyectos</span>
-                    <button onclick="openModal('projectModal')" class="hover:bg-black/5 p-1 rounded-md transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-                </div>
-                <div class="space-y-1" id="sidebar-projects"></div>
-            </div>
-            <div class="p-5 border-t border-brand-border">
-                 <button onclick="logout()" class="flex items-center gap-2 text-sm text-brand-muted hover:text-red-500 transition-colors w-full px-2 py-1"><i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión</button>
-            </div>
-        </aside>
-
-        <main class="flex-1 flex flex-col h-full min-w-0 bg-brand-bg relative z-10 transition-colors">
-            <header id="main-header" class="h-16 flex items-center px-6 shrink-0 border-b border-brand-border z-30 bg-brand-header text-brand-header-text shadow-sm transition-colors">
-                <button onclick="toggleSidebar()" class="p-2 hover:bg-white/10 rounded-xl mr-4 transition-colors lg:hidden"><i data-lucide="menu" class="w-6 h-6"></i></button>
-                <div class="font-extrabold text-2xl mr-8 hidden md:flex items-center gap-2 tracking-tight select-none"><span>Cerebrito</span> <span class="text-2xl">🧠</span></div>
-                <div class="hidden sm:flex ml-2 max-w-xl relative flex-1">
-                    <div class="transition-all rounded-xl h-10 flex items-center px-4 text-sm w-full bg-white/20 hover:bg-white/30 text-brand-header-text placeholder-white/80 shadow-inner focus-within:bg-white/40 focus-within:ring-2 focus-within:ring-white/20">
-                        <i data-lucide="search" class="w-4 h-4 mr-3 opacity-80"></i>
-                        <input type="text" id="searchInput" placeholder="Buscar tareas, notas, clientes..." class="bg-transparent border-none outline-none w-full placeholder-current opacity-100 font-medium" oninput="handleSearch(this.value)">
-                    </div>
-                </div>
-                <div class="ml-auto flex items-center gap-4 relative">
-                    <button onclick="openAddTaskModal()" class="p-2.5 hover:bg-white/10 rounded-xl transition-colors hidden sm:block" title="Añadir tarea rápida"><i data-lucide="plus" class="w-6 h-6"></i></button>
-                    <div class="relative">
-                        <div onclick="toggleUserMenu()" class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-md cursor-pointer overflow-hidden ring-2 ring-white/40 transition-transform hover:scale-105 active:scale-95 bg-white text-brand-primary" id="userAvatarBtn">
-                            <img id="userAvatarImg" class="w-full h-full object-cover hidden" alt="Avatar">
-                            <span id="userAvatarInitials">YO</span>
-                        </div>
-                        <div id="userMenu" class="hidden absolute right-0 top-14 w-72 bg-brand-menu rounded-2xl shadow-2xl border border-brand-menu-border z-50 overflow-hidden animate-in fade-in origin-top-right">
-                            <div class="p-4 border-b border-brand-menu-border bg-black/5"><h4 class="font-bold text-brand-text text-sm">Personalización</h4><p class="text-xs text-brand-muted">Elige tu estilo</p></div>
-                            <div class="p-3 grid grid-cols-2 gap-2" id="theme-selector"></div>
-                            <div class="p-2 border-t border-brand-menu-border mt-1 space-y-1">
-                                <button onclick="document.getElementById('avatarUploadInput').click()" class="w-full text-left px-3 py-2 text-sm font-medium text-brand-muted hover:bg-brand-item-hover rounded-lg flex items-center gap-2"><i data-lucide="image" class="w-4 h-4"></i> Cambiar Avatar</button>
-                                <button onclick="hardReset()" class="w-full text-left px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg flex items-center gap-2 transition-colors"><i data-lucide="trash" class="w-4 h-4"></i> Restablecer Datos</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="px-6 sm:px-10 pt-8 pb-4 border-b border-brand-border flex flex-col sm:flex-row sm:items-center justify-between shrink-0 bg-brand-bg/95 backdrop-blur-sm z-20 gap-4" id="view-header">
-                <div class="flex items-center gap-3">
-                    <h1 id="view-title" class="text-3xl font-extrabold text-brand-text tracking-tight">Bandeja de Entrada</h1>
-                </div>
-                <div class="flex items-center gap-3 self-start sm:self-auto" id="view-controls">
-                    <div class="flex bg-gray-100/80 border border-gray-200/50 rounded-xl p-1 gap-1 shadow-sm">
-                        <button onclick="setViewMode('list')" id="btn-list" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="list" class="w-4.5 h-4.5"></i></button>
-                        <button onclick="setViewMode('board')" id="btn-board" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="layout-grid" class="w-4.5 h-4.5"></i></button>
-                        <button onclick="setViewMode('calendar')" id="btn-calendar" class="p-2 rounded-lg hover:bg-white hover:shadow-sm text-gray-500 hover:text-brand-primary transition-all"><i data-lucide="calendar" class="w-4.5 h-4.5"></i></button>
-                    </div>
-                </div>
+    <!-- Project Modal (Create/Edit) -->
+    <div id="projectModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-80 animate-in fade-in zoom-in-95 border border-white/50">
+            <h3 class="font-bold mb-6 text-gray-800 text-xl tracking-tight" id="projectModalTitle">Nuevo Proyecto</h3>
+            <input type="text" id="newProjectInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Nombre">
+            
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cliente (Opcional)</label>
+                <select id="newProjectClient" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white">
+                    <option value="">Sin cliente</option>
+                    <!-- Filled by JS -->
+                </select>
             </div>
 
-            <div id="content-area" class="flex-1 overflow-hidden flex flex-col relative bg-brand-bg transition-colors">
-                <div id="main-container" class="h-full overflow-y-auto custom-scrollbar px-4 sm:px-10 py-6 mx-auto w-full max-w-6xl pb-32"></div>
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Color</label>
+                <div class="flex flex-wrap gap-2" id="projectColorPicker"></div>
             </div>
-            <div class="absolute bottom-8 right-8 z-40"><button onclick="openAddTaskModal()" class="w-16 h-16 bg-brand-primary text-white rounded-2xl shadow-xl shadow-brand-primary/30 flex items-center justify-center hover:scale-105 transition-all hover:bg-brand-primary-hover active:scale-95 border-2 border-white/20"><i data-lucide="plus" class="w-8 h-8"></i></button></div>
-        </main>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('projectModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="saveProject()" id="projectModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md transition-all active:scale-95">Crear</button>
+            </div>
+        </div>
     </div>
 
-    <!-- MODALS (All included) -->
-    <div id="taskModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity"><div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-xl mx-4 animate-in fade-in zoom-in-95 border border-white/50"><h3 class="text-2xl font-bold text-gray-800 mb-6">Nueva Tarea</h3><input type="text" id="newTaskInput" placeholder="¿Qué tienes en mente?" class="w-full text-xl font-medium outline-none mb-4 bg-transparent border-b-2 border-transparent focus:border-brand-primary/20 pb-2"><textarea id="newTaskDesc" placeholder="Detalles..." class="w-full text-base resize-none outline-none text-gray-600 mb-6 h-28 bg-gray-50/50 p-4 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-primary/20"></textarea><div class="mb-4"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Asignado a</label><select id="newTaskAssignee" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white"></select></div><div class="flex gap-2 mb-4"><input type="datetime-local" id="newTaskDate" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs bg-white"><select id="newTaskPriority" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs bg-white"></select><select id="newTaskProject" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs bg-white"></select></div><div class="flex gap-3 pt-4 border-t border-gray-100"><button onclick="closeModal('taskModal')" class="flex-1 px-5 py-3 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="saveTask()" id="taskModalBtn" class="flex-1 px-6 py-3 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-lg">Guardar</button></div></div></div>
-    
-    <div id="projectModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-80 animate-in fade-in zoom-in-95 border border-white/50"><h3 class="font-bold mb-6 text-xl" id="projectModalTitle">Nuevo Proyecto</h3><input type="text" id="newProjectInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4 outline-none focus:border-brand-primary focus:ring-2 text-sm" placeholder="Nombre"><div class="mb-4"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Cliente</label><select id="newProjectClient" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white"></select></div><div class="mb-6"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Color</label><div class="flex flex-wrap gap-2" id="projectColorPicker"></div></div><div class="flex justify-end gap-2"><button onclick="closeModal('projectModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="saveProject()" id="projectModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Crear</button></div></div></div>
+    <!-- Client Modal (Create/Edit) -->
+    <div id="clientModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 border border-white/50">
+            <h3 class="font-bold mb-6 text-gray-800 text-xl tracking-tight" id="clientModalTitle">Nuevo Cliente</h3>
+            
+            <div class="space-y-3">
+                <input type="text" id="clientNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Nombre Completo / Empresa">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="text" id="clientDniInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="DNI / CIF">
+                    <input type="text" id="clientPhoneInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Teléfono">
+                </div>
+                
+                <input type="text" id="clientEmailInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Email">
+                
+                <input type="text" id="clientAddressInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Dirección Completa">
+                
+                <textarea id="clientNotesInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium resize-none h-20" placeholder="Notas adicionales..."></textarea>
+            </div>
 
-    <div id="clientModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-lg mx-4 animate-in fade-in zoom-in-95 border border-white/50"><h3 class="font-bold mb-6 text-xl" id="clientModalTitle">Nuevo Cliente</h3><div class="space-y-3"><input type="text" id="clientNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Nombre / Empresa"><div class="grid grid-cols-2 gap-3"><input type="text" id="clientDniInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="DNI"><input type="text" id="clientPhoneInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Teléfono"></div><input type="text" id="clientEmailInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Email"><input type="text" id="clientAddressInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Dirección"><textarea id="clientNotesInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm h-20 resize-none" placeholder="Notas..."></textarea></div><div class="flex justify-end gap-2 mt-6"><button onclick="closeModal('clientModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="saveClient()" id="clientModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Guardar</button></div></div></div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('clientModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="saveClient()" id="clientModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md transition-all active:scale-95">Guardar</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="clientDetailsModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col"><div class="flex justify-between items-start mb-6 shrink-0"><div><h3 class="font-bold text-2xl" id="clientDetailsName">Cliente</h3><p class="text-sm text-brand-muted">Ficha completa</p></div><button onclick="closeModal('clientDetailsModal')" class="text-gray-400 p-2"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="flex-1 overflow-y-auto space-y-6"><div><h4 class="font-bold text-sm text-brand-text uppercase mb-3 border-b pb-2">Proyectos</h4><div id="clientDetailsProjects" class="space-y-2"></div></div><div><h4 class="font-bold text-sm text-brand-text uppercase mb-3 border-b pb-2">Suscripciones</h4><div id="clientDetailsSubs" class="space-y-2"></div></div></div></div></div>
+    <!-- Client Details Modal (NEW) -->
+    <div id="clientDetailsModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-2xl mx-4 animate-in fade-in zoom-in-95 border border-white/50 h-[80vh] flex flex-col">
+            <div class="flex justify-between items-start mb-6 shrink-0">
+                <div>
+                    <h3 class="font-bold text-2xl text-brand-text tracking-tight" id="clientDetailsName">Nombre del Cliente</h3>
+                    <p class="text-sm text-brand-muted">Ficha completa</p>
+                </div>
+                <button onclick="closeModal('clientDetailsModal')" class="text-gray-400 hover:text-gray-600 bg-gray-50 p-2 rounded-full hover:bg-gray-100 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-6 pr-2">
+                <!-- Projects Section -->
+                <div>
+                    <h4 class="font-bold text-sm text-brand-text uppercase tracking-widest mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i data-lucide="folder" class="w-4 h-4"></i> Proyectos Asignados</h4>
+                    <div id="clientDetailsProjects" class="space-y-2">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
 
-    <div id="collaboratorModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-md"><h3 class="font-bold mb-6 text-xl" id="collabModalTitle">Colaborador</h3><div class="space-y-4"><input type="text" id="collabNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Nombre"><input type="text" id="collabRoleInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Rol"><input type="text" id="collabEmailInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Email"></div><div class="flex justify-end gap-2 mt-6"><button onclick="closeModal('collaboratorModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="saveCollaborator()" id="collabModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Guardar</button></div></div></div>
+                <!-- Subscriptions Section -->
+                <div>
+                    <h4 class="font-bold text-sm text-brand-text uppercase tracking-widest mb-3 border-b border-gray-100 pb-2 flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i> Suscripciones Activas</h4>
+                    <div id="clientDetailsSubs" class="space-y-2">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div id="subscriptionModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-96"><h3 class="font-bold mb-6 text-xl" id="subModalTitle">Suscripción</h3><input type="text" id="subNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-3 text-sm" placeholder="Servicio"><textarea id="subDescInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-3 text-sm h-20 resize-none" placeholder="Descripción"></textarea><div class="flex gap-2 mb-3"><input type="number" id="subPriceInput" class="w-1/2 border border-gray-200 rounded-xl px-4 py-3 text-sm" placeholder="Precio"><select id="subCycleInput" class="w-1/2 border border-gray-200 rounded-xl px-3 py-3 text-sm"><option value="monthly">Mensual</option><option value="yearly">Anual</option></select></div><div class="mb-4"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Cliente</label><select id="subClientInput" class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm bg-white"></select></div><div class="mb-6"><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Renovación</label><input type="datetime-local" id="subDateInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm"></div><div class="flex justify-end gap-2"><button onclick="closeModal('subscriptionModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="saveSubscription()" id="subModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Guardar</button></div></div></div>
+    <!-- Collaborator Modal (Create/Edit) -->
+    <div id="collaboratorModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-md mx-4 animate-in fade-in zoom-in-95 border border-white/50">
+            <h3 class="font-bold mb-6 text-gray-800 text-xl tracking-tight" id="collabModalTitle">Nuevo Colaborador</h3>
+            
+            <div class="space-y-4">
+                <input type="text" id="collabNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Nombre del trabajador">
+                <input type="text" id="collabRoleInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Cargo / Rol (ej. Diseñador, Dev)">
+                <input type="text" id="collabEmailInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Email (opcional)">
+            </div>
 
-    <div id="priorityModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md"><div class="flex justify-between items-start mb-6"><h3 class="text-xl font-bold text-gray-800" id="priorityModalTitle">Prioridad</h3><div class="flex gap-2"><button onclick="deletePriority()" class="text-red-400 p-2"><i data-lucide="trash-2" class="w-5 h-5"></i></button><button onclick="closeModal('priorityModal')" class="text-gray-400 p-2"><i data-lucide="x" class="w-5 h-5"></i></button></div></div><div class="space-y-4"><div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Nombre</label><input type="text" id="prioName" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none"></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Color</label><div class="flex flex-wrap gap-2" id="prioColorPicker"></div></div><div><label class="block text-xs font-bold text-gray-400 uppercase mb-1">Icono</label><div class="flex flex-wrap gap-2" id="prioIconPicker"></div></div></div><div class="flex justify-end gap-3 mt-6"><button onclick="closeModal('priorityModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="savePriority()" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Guardar</button></div></div></div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('collaboratorModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="saveCollaborator()" id="collabModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md transition-all active:scale-95">Guardar</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="timerModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-sm text-center relative overflow-hidden"><div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div><div class="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce"><i data-lucide="alarm-clock" class="w-12 h-12 text-green-600"></i></div><h3 class="text-3xl font-black text-gray-800 mb-2">¡Tiempo Terminado!</h3><p class="text-gray-500 mb-8 text-lg">Sesión de <span id="timerModalMode" class="font-bold text-brand-primary">estudio</span> finalizada.</p><button onclick="closeModal('timerModal'); resetTimer();" class="w-full px-6 py-3.5 text-base font-bold text-white bg-brand-primary rounded-2xl">Genial</button></div></div>
+    <!-- Subscription Modal (Create/Edit) -->
+    <div id="subscriptionModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-96 animate-in fade-in zoom-in-95 border border-white/50">
+            <h3 class="font-bold mb-6 text-gray-800 text-xl tracking-tight" id="subModalTitle">Nueva Suscripción</h3>
+            <input type="text" id="subNameInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Nombre del Servicio">
+            
+            <textarea id="subDescInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium resize-none h-20" placeholder="Descripción (opcional)"></textarea>
 
-    <div id="inputModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-6 w-96 shadow-2xl"><h3 id="inputModalTitle" class="font-bold text-lg mb-4 text-gray-800">Dato</h3><input type="text" id="genericInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4 text-sm font-medium" onkeydown="if(event.key==='Enter') closeInputModal(true)"><div class="flex justify-end gap-2"><button onclick="closeInputModal(false)" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="closeInputModal(true)" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl">Aceptar</button></div></div></div>
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white rounded-3xl p-6 w-96 shadow-2xl border-l-8 border-red-500"><h3 class="font-bold text-lg mb-2 text-gray-800">¿Seguro?</h3><p id="confirmModalText" class="text-gray-500 text-sm mb-6">No se puede deshacer.</p><div class="flex justify-end gap-2"><button onclick="closeConfirmModal(false)" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button><button onclick="closeConfirmModal(true)" class="px-6 py-2 text-sm font-bold text-white bg-red-500 rounded-xl">Eliminar</button></div></div></div>
+            <div class="flex gap-2 mb-3">
+                <input type="number" id="subPriceInput" class="w-1/2 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium" placeholder="Precio">
+                <select id="subCycleInput" class="w-1/2 border border-gray-200 rounded-xl px-3 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium">
+                    <option value="monthly">Mensual</option>
+                    <option value="yearly">Anual</option>
+                </select>
+            </div>
 
-    <!-- JAVASCRIPT -->
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Cliente</label>
+                <select id="subClientInput" class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white">
+                    <option value="">Seleccionar cliente...</option>
+                    <!-- Filled by JS -->
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Próxima Renovación (Fecha y Hora)</label>
+                <input type="datetime-local" id="subDateInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium">
+            </div>
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('subscriptionModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="saveSubscription()" id="subModalBtn" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md transition-all active:scale-95">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Priority Settings Modal -->
+    <div id="priorityModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-6 shadow-2xl w-full max-w-md mx-4 animate-in fade-in zoom-in-95 border border-white/50">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="text-xl font-bold text-gray-800 tracking-tight" id="priorityModalTitle">Editar Prioridad</h3>
+                <div class="flex gap-2">
+                    <!-- Delete Button Added Here -->
+                    <button onclick="deletePriority()" class="text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full hover:bg-red-100 transition-colors" title="Eliminar Prioridad"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    <button onclick="closeModal('priorityModal')" class="text-gray-400 hover:text-gray-600 bg-gray-50 p-2 rounded-full hover:bg-gray-100 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nombre</label>
+                    <input type="text" id="prioName" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-brand-primary focus:ring-1 focus:ring-brand-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Color</label>
+                    <div class="flex flex-wrap gap-2" id="prioColorPicker"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Icono</label>
+                    <div class="flex flex-wrap gap-2" id="prioIconPicker"></div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button onclick="closeModal('priorityModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
+                <button onclick="savePriority()" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md transition-all active:scale-95">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timer Finished Modal -->
+    <div id="timerModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-sm mx-4 transform transition-all scale-100 animate-in fade-in zoom-in-95 border border-white/50 text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-400 to-blue-500"></div>
+            <div class="mx-auto w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-lg">
+                <i data-lucide="alarm-clock" class="w-12 h-12 text-green-600"></i>
+            </div>
+            <h3 class="text-3xl font-black text-gray-800 mb-2 tracking-tight">¡Tiempo Terminado!</h3>
+            <p class="text-gray-500 mb-8 text-lg">Has completado tu sesión de <span id="timerModalMode" class="font-bold text-brand-primary">estudio</span> con éxito.</p>
+            <button onclick="closeModal('timerModal'); resetTimer();" class="w-full px-6 py-3.5 text-base font-bold text-white bg-brand-primary rounded-2xl hover:bg-brand-primary-hover shadow-xl shadow-brand-primary/30 transition-all active:scale-95">Genial, continuar</button>
+        </div>
+    </div>
+
+    <!-- Generic Input Modal -->
+    <div id="inputModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-6 w-96 shadow-2xl animate-in fade-in zoom-in-95">
+            <h3 id="inputModalTitle" class="font-bold text-lg mb-4 text-gray-800">Introducir dato</h3>
+            <input type="text" id="genericInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-4 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 font-medium" onkeydown="if(event.key==='Enter') closeInputModal(true)">
+            <div class="flex justify-end gap-2">
+                <button onclick="closeInputModal(false)" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button>
+                <button onclick="closeInputModal(true)" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md">Aceptar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirm Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-6 w-96 shadow-2xl animate-in fade-in zoom-in-95 border-l-8 border-red-500">
+            <h3 class="font-bold text-lg mb-2 text-gray-800">¿Estás seguro?</h3>
+            <p id="confirmModalText" class="text-gray-500 text-sm mb-6">Esta acción no se puede deshacer.</p>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeConfirmModal(false)" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button>
+                <button onclick="closeConfirmModal(true)" class="px-6 py-2 text-sm font-bold text-white bg-red-500 rounded-xl hover:bg-red-600 shadow-md">Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- 1. DEFINICIÓN DE FUNCIONES (¡ORDEN CRÍTICO!) ---
-        const USE_DB = true; 
-        const API_URL = 'api.php';
-        const themesConfig = { cerebrito: { label: 'Cerebrito', primary: '#c2410c', primaryHover: '#9a3412', sidebar: '#fff7ed', header: '#ea580c', headerText: '#ffffff', bg: '#ffffff', text: '#1f2937', textMuted: '#6b7280', border: '#fdba74', itemBg: '#ffffff', itemHover: '#f9fafb', menuBg: '#ffffff', menuBorder: '#f3f4f6' }, apple: { label: 'Minimal', primary: '#0066CC', primaryHover: '#0052a3', sidebar: '#F5F5F7', header: '#FFFFFF', headerText: '#1d1d1f', bg: '#FFFFFF', text: '#1d1d1f', textMuted: '#6e6e73', border: '#d2d2d7', itemBg: '#ffffff', itemHover: '#f2f2f7', menuBg: '#ffffff', menuBorder: '#e5e7eb' }, pastel: { label: 'Pinky', primary: '#be185d', primaryHover: '#9d174d', sidebar: '#fff1f2', header: '#fce7f3', headerText: '#831843', bg: '#fffbfd', text: '#831843', textMuted: '#9d174d', border: '#fbcfe8', itemBg: '#ffffff', itemHover: '#fdf2f8', menuBg: '#ffffff', menuBorder: '#fbcfe8' }, dark: { label: 'Noche', primary: '#6366f1', primaryHover: '#4f46e5', sidebar: '#1e293b', header: '#0f172a', headerText: '#f8fafc', bg: '#334155', text: '#f1f5f9', textMuted: '#cbd5e1', border: '#475569', itemBg: '#1e293b', itemHover: '#0f172a', menuBg: '#1e293b', menuBorder: '#334155' }, forest: { label: 'Bosque', primary: '#047857', primaryHover: '#065f46', sidebar: '#ecfdf5', header: '#064e3b', headerText: '#ffffff', bg: '#f0fdf4', text: '#064e3b', textMuted: '#047857', border: '#6ee7b7', itemBg: '#ffffff', itemHover: '#d1fae5', menuBg: '#ffffff', menuBorder: '#d1fae5' } };
-        const colorPalette = [{name:'red',bg:'bg-red-500'},{name:'orange',bg:'bg-orange-500'},{name:'amber',bg:'bg-amber-500'},{name:'green',bg:'bg-green-500'},{name:'blue',bg:'bg-blue-500'},{name:'indigo',bg:'bg-indigo-500'},{name:'purple',bg:'bg-purple-500'},{name:'pink',bg:'bg-pink-500'},{name:'gray',bg:'bg-gray-500'}];
+        // --- HELPER FUNCTIONS (DEFINED FIRST TO AVOID REFERENCE ERRORS) ---
+        function showToast(msg) { 
+            const c = document.getElementById('toast-container'); 
+            const t = document.createElement('div'); 
+            t.className = 'toast'; 
+            t.innerHTML = `<span class="font-bold text-brand-primary">Info</span><span>${msg}</span>`; 
+            c.appendChild(t); 
+            setTimeout(()=>t.classList.add('show'),10); 
+            setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000); 
+        }
+
+        function formatDate(d) {
+            if(!d) return '';
+            const date = new Date(d);
+            if(isNaN(date.getTime())) return '';
+            const hasTime = d.includes('T');
+            const dateStr = date.toLocaleDateString('es-ES', {day:'numeric', month:'short'});
+            const timeStr = hasTime ? date.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'}) : '';
+            return `${dateStr}${hasTime ? ' ' + timeStr : ''}`;
+        }
+
+        function isOverdue(d) { return new Date(d) < new Date(new Date().toDateString()); }
+        
+        function getPrioStyle(level) {
+            const prio = state.priorities[level] || state.priorities[4] || { label: '?', color: 'gray', icon: 'flag' };
+            const colorName = prio.color;
+            const style = colorPalette.find(c => c.name === colorName) || colorPalette[8];
+            return { label: prio.label, class: style.class, icon: prio.icon };
+        }
+
+        function getTaskCount(id) { 
+            const today = new Date().toISOString().split('T')[0];
+            const activeTasks = state.tasks.filter(t => !t.completed);
+            if(id === 'inbox') return activeTasks.length; 
+            if(id === 'today') return activeTasks.filter(t => t.date && t.date.startsWith(today)).length;
+            if(id === 'upcoming') return activeTasks.filter(t => t.date && t.date > today && !t.date.startsWith(today)).length;
+            if(id === 'studies') return activeTasks.filter(t => t.projectId === 'studies').length;
+            return ''; 
+        }
+
+        // --- CONFIG & STATE ---
+        const USE_DB = false; 
+
+        // Themes
+        const themesConfig = {
+            cerebrito: { label: 'Cerebrito', primary: '#c2410c', primaryHover: '#9a3412', sidebar: '#fff7ed', header: '#ea580c', headerText: '#ffffff', bg: '#ffffff', text: '#1f2937', textMuted: '#6b7280', border: '#fdba74', itemBg: '#ffffff', itemHover: '#f9fafb', menuBg: '#ffffff', menuBorder: '#f3f4f6' },
+            apple: { label: 'Minimal', primary: '#0066CC', primaryHover: '#0052a3', sidebar: '#F5F5F7', header: '#FFFFFF', headerText: '#1d1d1f', bg: '#FFFFFF', text: '#1d1d1f', textMuted: '#6e6e73', border: '#d2d2d7', itemBg: '#ffffff', itemHover: '#f2f2f7', menuBg: '#ffffff', menuBorder: '#e5e7eb' },
+            pastel: { label: 'Pinky', primary: '#be185d', primaryHover: '#9d174d', sidebar: '#fff1f2', header: '#fce7f3', headerText: '#831843', bg: '#fffbfd', text: '#831843', textMuted: '#9d174d', border: '#fbcfe8', itemBg: '#ffffff', itemHover: '#fdf2f8', menuBg: '#ffffff', menuBorder: '#fbcfe8' },
+            dark: { label: 'Noche', primary: '#6366f1', primaryHover: '#4f46e5', sidebar: '#1e293b', header: '#0f172a', headerText: '#f8fafc', bg: '#334155', text: '#f1f5f9', textMuted: '#cbd5e1', border: '#475569', itemBg: '#1e293b', itemHover: '#0f172a', menuBg: '#1e293b', menuBorder: '#334155' },
+            forest: { label: 'Bosque', primary: '#047857', primaryHover: '#065f46', sidebar: '#ecfdf5', header: '#064e3b', headerText: '#ffffff', bg: '#f0fdf4', text: '#064e3b', textMuted: '#047857', border: '#6ee7b7', itemBg: '#ffffff', itemHover: '#d1fae5', menuBg: '#ffffff', menuBorder: '#d1fae5' }
+        };
+
+        // Color Palettes
+        const colorPalette = [
+            { name: 'red', class: 'text-red-600 bg-red-50 border-red-200', bg: 'bg-red-500' },
+            { name: 'orange', class: 'text-orange-600 bg-orange-50 border-orange-200', bg: 'bg-orange-500' },
+            { name: 'amber', class: 'text-amber-600 bg-amber-50 border-amber-200', bg: 'bg-amber-500' },
+            { name: 'green', class: 'text-green-600 bg-green-50 border-green-200', bg: 'bg-green-500' },
+            { name: 'blue', class: 'text-blue-600 bg-blue-50 border-blue-200', bg: 'bg-blue-500' },
+            { name: 'indigo', class: 'text-indigo-600 bg-indigo-50 border-indigo-200', bg: 'bg-indigo-500' },
+            { name: 'purple', class: 'text-purple-600 bg-purple-50 border-purple-200', bg: 'bg-purple-500' },
+            { name: 'pink', class: 'text-pink-600 bg-pink-50 border-pink-200', bg: 'bg-pink-500' },
+            { name: 'gray', class: 'text-gray-600 bg-gray-50 border-gray-200', bg: 'bg-gray-500' }
+        ];
+
         const iconPalette = ['flag', 'alert-circle', 'star', 'circle', 'arrow-up', 'check-circle', 'zap', 'flame', 'target', 'heart', 'bookmark', 'tag'];
 
+        // State
         let state = {
-            tasks: [], projects: [], notes: [], clients: [], subscriptions: [], collaborators: [],
-            priorities: { 1: { label: 'Urgente', color: 'red', icon: 'flag' }, 2: { label: 'Importante', color: 'orange', icon: 'flag' }, 3: { label: 'Normal', color: 'blue', icon: 'flag' }, 4: { label: 'Baja', color: 'gray', icon: 'flag' } },
+            tasks: [], projects: [], notes: [],
+            clients: [], subscriptions: [], collaborators: [],
+            priorities: {
+                1: { label: 'Urgente', color: 'red', icon: 'flag' },
+                2: { label: 'Importante', color: 'orange', icon: 'flag' },
+                3: { label: 'Normal', color: 'blue', icon: 'flag' },
+                4: { label: 'Baja', color: 'gray', icon: 'flag' }
+            },
             theme: 'cerebrito', view: 'inbox', viewMode: 'list', searchQuery: '',
             timerSettings: { focus: 25, break: 5 }, timer: { time: 1500, mode: 'focus', isActive: false },
             isTimerSettingsOpen: false, tempSettings: { focus: 25, break: 5 }, calendarDate: new Date(),
-            userAvatar: null, editingTaskId: null, editingProjectId: null, editingPrioId: null, editingClientId: null, editingSubId: null, editingCollabId: null,
-            tempProjectColor: 'bg-gray-500', tempPrioColor: 'red', tempPrioIcon: 'flag', pendingCallback: null
+            userAvatar: null, editingTaskId: null, editingProjectId: null, editingPrioId: null,
+            editingClientId: null, editingSubId: null, editingCollabId: null,
+            tempProjectColor: 'bg-gray-500', tempPrioColor: 'red', tempPrioIcon: 'flag',
+            pendingCallback: null // for modals
         };
 
-        function showToast(msg) { const c = document.getElementById('toast-container'); const t = document.createElement('div'); t.className = 'toast'; t.innerHTML = `<span class="font-bold text-brand-primary">Info</span><span>${msg}</span>`; c.appendChild(t); setTimeout(()=>t.classList.add('show'),10); setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='taskModal') populateTaskModal(); if(id==='projectModal') populateProjectModal(); if(id==='subscriptionModal') populateSubModal(); if(id==='priorityModal'&&!state.editingPrioId) { document.getElementById('priorityModalTitle').innerText='Nueva Prioridad'; document.getElementById('prioName').value=''; state.tempPrioColor='gray'; renderPrioColorPicker(); } }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); resetModalState(id); }
-        function resetModalState(id) {
-             if(id==='taskModal') { state.editingTaskId=null; document.getElementById('newTaskInput').value=''; document.getElementById('newTaskDesc').value=''; document.getElementById('newTaskDate').value=''; }
-             if(id==='projectModal') { state.editingProjectId=null; document.getElementById('newProjectInput').value=''; }
-             if(id==='clientModal') { state.editingClientId=null; document.getElementById('clientNameInput').value=''; document.getElementById('clientEmailInput').value=''; document.getElementById('clientPhoneInput').value=''; document.getElementById('clientDniInput').value=''; document.getElementById('clientAddressInput').value=''; document.getElementById('clientNotesInput').value=''; document.getElementById('clientModalBtn').innerText='Guardar'; document.getElementById('clientModalTitle').innerText='Nuevo Cliente'; }
-             if(id==='subscriptionModal') { state.editingSubId=null; document.getElementById('subNameInput').value=''; document.getElementById('subDescInput').value=''; document.getElementById('subPriceInput').value=''; document.getElementById('subDateInput').value=''; document.getElementById('subModalBtn').innerText='Guardar'; document.getElementById('subModalTitle').innerText='Nueva Suscripción'; }
-             if(id==='collaboratorModal') { state.editingCollabId=null; document.getElementById('collabNameInput').value=''; document.getElementById('collabRoleInput').value=''; document.getElementById('collabEmailInput').value=''; document.getElementById('collabModalBtn').innerText='Guardar'; }
-             if(id==='priorityModal') state.editingPrioId=null;
+        // --- USER MENU LOGIC ---
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
         }
 
-        function populateTaskModal() {
-            document.getElementById('newTaskProject').innerHTML = `<option value="inbox">📥 Bandeja</option>` + (state.projects||[]).map(p=>`<option value="${p.id}"># ${p.name}</option>`).join('');
-            document.getElementById('newTaskPriority').innerHTML = Object.keys(state.priorities).map(k=>`<option value="${k}">${state.priorities[k].label}</option>`).join('');
-            document.getElementById('newTaskAssignee').innerHTML = `<option value="">Sin asignar</option>` + (state.collaborators||[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-        }
-        function populateProjectModal() {
-            document.getElementById('newProjectClient').innerHTML = `<option value="">Sin cliente</option>` + (state.clients||[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
-            if(!state.editingProjectId) { document.getElementById('projectModalTitle').innerText='Nuevo Proyecto'; document.getElementById('newProjectInput').value=''; document.getElementById('projectModalBtn').innerText='Crear'; state.tempProjectColor='bg-gray-500'; renderProjectColorPicker(); }
-        }
-        function populateSubModal() {
-             document.getElementById('subClientInput').innerHTML = `<option value="">Seleccionar cliente...</option>` + (state.clients||[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+        function renderUserMenuThemes() {
+            const container = document.getElementById('theme-selector');
+            container.innerHTML = Object.keys(themesConfig).map(key => {
+                const t = themesConfig[key];
+                const isActive = state.theme === key;
+                return `<button onclick="applyTheme('${key}')" class="flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-all border ${isActive ? 'bg-black/10 border-black/20 ring-1 ring-black/10' : 'bg-brand-item border-black/5 hover:bg-black/5'}">
+                    <div class="w-4 h-4 rounded-full" style="background:${t.primary}"></div> <span class="text-brand-text">${t.label}</span>
+                </button>`
+            }).join('');
         }
 
-        // --- AUTH ---
-        async function requestLoginCode() {
-            const email = document.getElementById('loginEmail').value;
-            if(!email) return showToast("Email requerido");
-            const btn = document.querySelector('#loginStep1 button'); btn.innerText="Enviando..."; btn.disabled=true;
-            if(USE_DB) {
-                try {
-                    const r = await fetch(API_URL+'?action=request_code', { method:'POST', body:JSON.stringify({email})});
-                    const d = await r.json();
-                    if(d.status==='success') { document.getElementById('loginStep1').classList.add('hidden'); document.getElementById('loginStep2').classList.remove('hidden'); }
-                    else showToast(d.message);
-                } catch(e) { showToast("Error conexión"); }
-            } else {
-                showToast("Modo Offline: 000000"); document.getElementById('loginStep1').classList.add('hidden'); document.getElementById('loginStep2').classList.remove('hidden');
-            }
-            btn.innerText="Enviar Código"; btn.disabled=false;
-        }
-
-        async function verifyLoginCode() {
-            const email = document.getElementById('loginEmail').value;
-            const code = document.getElementById('otpCode').value;
-            if(USE_DB) {
-                try {
-                    const r = await fetch(API_URL+'?action=verify_code', { method:'POST', body:JSON.stringify({email,code})});
-                    const d = await r.json();
-                    if(d.status==='success') { localStorage.setItem('cerebrito_email', d.email); showApp(); }
-                    else showToast("Código inválido");
-                } catch(e) { showToast("Error conexión"); }
-            } else {
-                if(code==='000000') { localStorage.setItem('cerebrito_email', 'offline'); showApp(); } else showToast("Código inválido");
-            }
-        }
-
-        function showApp() {
-             document.getElementById('loginScreen').classList.add('login-slide-up');
-             setTimeout(() => {
-                 document.getElementById('loginScreen').classList.add('hidden');
-                 document.getElementById('appContainer').classList.remove('hidden');
-                 loadData();
-             }, 500);
-        }
-
-        // --- DATA LOAD ---
-        async function loadData() {
-            if(USE_DB) {
-                const email = localStorage.getItem('cerebrito_email');
-                if(email) {
-                    try {
-                        const r = await fetch(API_URL+'?action=load&email='+encodeURIComponent(email));
-                        if(r.ok) {
-                            const d = await r.json();
-                            if(d && Object.keys(d).length>0) {
-                                state.tasks=d.tasks||[]; state.projects=d.projects||[]; state.priorities=d.priorities||initSampleData().priorities;
-                                state.clients=d.clients||[]; state.subscriptions=d.subscriptions||[]; state.collaborators=d.collaborators||[]; state.notes=d.notes||[];
-                            } else {
-                                Object.assign(state, initSampleData());
-                                saveData('tasks'); saveData('projects'); saveData('priorities');
-                            }
-                        }
-                    } catch(e) { console.warn("Offline", e); loadLocalData(); }
-                }
-            } else loadLocalData();
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            if(!localStorage.getItem('tm_theme')) applyTheme('cerebrito'); else applyTheme(state.theme);
+            renderMain();
+            renderUserMenuThemes();
             
-            applyTheme(state.theme); renderSidebar(); renderMain();
+            // Timer Loop & Notifications
+            setInterval(() => { 
+                // Timer Logic
+                if(state.timer.isActive && state.timer.time > 0) { 
+                    state.timer.time--; 
+                    updateTimerDisplay(); 
+                } else if(state.timer.isActive && state.timer.time === 0) { 
+                    state.timer.isActive = false; 
+                    document.getElementById('timer-widget-container')?.classList.add('timer-finished'); 
+                    const modeText = state.timer.mode === 'focus' ? 'estudio' : 'descanso'; 
+                    document.getElementById('timerModalMode').innerText = modeText; 
+                    openModal('timerModal'); 
+                    renderMain(); 
+                }
+                
+                // Subscription Check Logic
+                checkSubscriptionNotifications();
+
+            }, 1000);
+        });
+
+        function checkSubscriptionNotifications() {
+            const now = new Date();
+            state.subscriptions.forEach(s => {
+                if (s.nextPayment && !s.alerted) {
+                    const payDate = new Date(s.nextPayment);
+                    const diff = payDate - now;
+                    if (diff <= 0 && diff > -60000) { 
+                        showToast(`¡Renovación pendiente: ${s.name}! 🔔`);
+                        s.alerted = true; 
+                        saveData('subscriptions');
+                    }
+                }
+            });
+        }
+
+        // Common Functions / Helpers
+        function getFilteredTasks() {
+            let tasks = state.tasks;
+            if(state.searchQuery) return tasks.filter(t => t.content.toLowerCase().includes(state.searchQuery));
+            if (state.view === 'today') tasks = tasks.filter(t => t.date && t.date.startsWith(new Date().toISOString().split('T')[0]));
+            else if (state.view === 'upcoming') tasks = tasks.filter(t => t.date > new Date().toISOString().split('T')[0]);
+            else if (state.view === 'inbox') tasks = tasks.filter(t => !t.completed); 
+            else if (state.view === 'studies') return [];
+            else if (['subscriptions', 'clients', 'collaborators'].includes(state.view)) return [];
+            else if (state.view.startsWith('filter-p')) tasks = tasks.filter(t => t.priority == state.view.split('filter-p')[1] && !t.completed);
+            else if (state.view.startsWith('filter-collab-')) {
+                 const cId = state.view.split('filter-collab-')[1];
+                 tasks = tasks.filter(t => t.assignedTo === cId && !t.completed);
+            }
+            else tasks = tasks.filter(t => t.projectId === state.view);
+            return tasks;
+        }
+
+        // Data Layer
+        async function loadData() {
+            loadLocalData();
+            if(!state.timer.isActive) state.timer.time = state.timerSettings[state.timer.mode] * 60;
+            const savedAvatar = localStorage.getItem('tm_avatar'); if(savedAvatar) { state.userAvatar = savedAvatar; updateUserAvatarUI(); }
+            renderSidebar(); renderMain();
         }
 
         function loadLocalData() {
-             const s = initSampleData();
-             state.tasks = JSON.parse(localStorage.getItem('tm_tasks')) || s.tasks;
-             state.projects = JSON.parse(localStorage.getItem('tm_projects')) || s.projects;
-             state.priorities = JSON.parse(localStorage.getItem('tm_priorities')) || s.priorities;
-             state.clients = JSON.parse(localStorage.getItem('tm_clients')) || [];
-             state.subscriptions = JSON.parse(localStorage.getItem('tm_subscriptions')) || [];
-             state.collaborators = JSON.parse(localStorage.getItem('tm_collaborators')) || [];
-             state.notes = JSON.parse(localStorage.getItem('tm_notes')) || [];
+            try {
+                const t = localStorage.getItem('tm_tasks'); state.tasks = t ? JSON.parse(t) : initSampleData().tasks;
+                const p = localStorage.getItem('tm_projects'); state.projects = p ? JSON.parse(p) : initSampleData().projects;
+                // ROBUST FIX for Priorities: Ensure it's an object
+                const pr = localStorage.getItem('tm_priorities'); 
+                if(pr) {
+                    const parsed = JSON.parse(pr);
+                    state.priorities = (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) ? parsed : initSampleData().priorities;
+                } else if (!state.priorities) {
+                    state.priorities = initSampleData().priorities;
+                }
+
+                const th = localStorage.getItem('tm_theme'); if (th && themesConfig[th]) state.theme = th;
+                const ts = localStorage.getItem('tm_timer_settings'); if(ts) state.timerSettings = JSON.parse(ts);
+                const c = localStorage.getItem('tm_clients'); state.clients = c ? JSON.parse(c) : [];
+                const s = localStorage.getItem('tm_subscriptions'); state.subscriptions = s ? JSON.parse(s) : [];
+                const col = localStorage.getItem('tm_collaborators'); state.collaborators = col ? JSON.parse(col) : [];
+                
+                const n = localStorage.getItem('tm_notes'); 
+                if(n) {
+                    const parsed = JSON.parse(n);
+                    state.notes = Array.isArray(parsed) ? parsed : [];
+                } else {
+                    state.notes = [];
+                }
+            } catch (e) {
+                console.error("Error loading data", e);
+                state.notes = [];
+                state.clients = [];
+                state.collaborators = [];
+            }
         }
 
         function initSampleData() {
             const today = new Date().toISOString().split('T')[0];
             return {
-                tasks: [{id: 101, content: "Bienvenido", description: "Explora la app", projectId: 'inbox', priority: 1, completed: false, date: today}],
-                projects: [{id:'p1', name:'Personal', color:'bg-green-500'}, {id:'p2', name:'Trabajo', color:'bg-blue-500'}],
-                priorities: { 1: { label: 'Urgente', color: 'red', icon: 'flag' }, 2: { label: 'Importante', color: 'orange', icon: 'flag' }, 3: { label: 'Normal', color: 'blue', icon: 'flag' }, 4: { label: 'Baja', color: 'gray', icon: 'flag' } }
+                tasks: [{id: 1, content: "Bienvenido a Cerebrito", description: "Explora las vistas usando el menú", projectId: 'inbox', priority: 1, completed: false, date: today}],
+                projects: [{ id: 'personal', name: 'Personal', color: 'bg-green-500' }, { id: 'work', name: 'Trabajo', color: 'bg-blue-500' }],
+                priorities: {
+                    1: { label: 'Urgente', color: 'red', icon: 'flag' },
+                    2: { label: 'Importante', color: 'orange', icon: 'flag' },
+                    3: { label: 'Normal', color: 'blue', icon: 'flag' },
+                    4: { label: 'Baja', color: 'gray', icon: 'flag' }
+                }
             };
         }
 
         async function saveData(type) {
-            let payload = state[type];
-            localStorage.setItem('tm_'+type, JSON.stringify(payload));
-            if(USE_DB) {
-                const email = localStorage.getItem('cerebrito_email');
-                if(email) {
-                    try { fetch(API_URL, { method:'POST', body:JSON.stringify({key:'tm_'+type, value:payload, email}) }); } catch(e){}
-                }
-            }
-            if(['projects','tasks','priorities','clients','subscriptions','collaborators'].includes(type)) renderSidebar();
-        }
-
-        // --- RENDER ---
-        function renderMain() {
-            const c = document.getElementById('main-container');
-            const title = document.getElementById('view-title');
-            let txt = '';
-            if(state.view==='inbox') txt='Bandeja de Entrada'; else if(state.view==='studies') txt='Zona de Estudio'; else if(state.view==='subscriptions') txt='Suscripciones'; else if(state.view==='clients') txt='Cartera de Clientes'; else if(state.view==='collaborators') txt='Equipo'; else if(state.view==='today') txt='Hoy'; else if(state.view==='upcoming') txt='Próximamente';
-            else if(state.view.startsWith('filter-p')) { const p=state.view.split('filter-p')[1]; txt = state.priorities[p]?.label || 'Prioridad'; }
-            else { const p=state.projects.find(x=>x.id===state.view); txt=p?p.name:'Proyecto'; }
+            if(type === 'tasks') localStorage.setItem('tm_tasks', JSON.stringify(state.tasks));
+            if(type === 'projects') localStorage.setItem('tm_projects', JSON.stringify(state.projects));
+            if(type === 'notes') localStorage.setItem('tm_notes', JSON.stringify(state.notes));
+            if(type === 'priorities') localStorage.setItem('tm_priorities', JSON.stringify(state.priorities));
+            if(type === 'theme') localStorage.setItem('tm_theme', state.theme);
+            if(type === 'timer') localStorage.setItem('tm_timer_settings', JSON.stringify(state.timerSettings));
+            if(type === 'clients') localStorage.setItem('tm_clients', JSON.stringify(state.clients));
+            if(type === 'subscriptions') localStorage.setItem('tm_subscriptions', JSON.stringify(state.subscriptions));
+            if(type === 'collaborators') localStorage.setItem('tm_collaborators', JSON.stringify(state.collaborators));
             
-            if(state.searchQuery) { title.innerText=`Buscar: "${state.searchQuery}"`; document.getElementById('view-controls').style.display='none'; }
-            else { title.innerText=txt; document.getElementById('view-controls').style.display = ['studies','subscriptions','clients','collaborators'].includes(state.view) ? 'none' : 'flex'; }
+            if(type === 'projects' || type === 'tasks' || type === 'priorities') { renderSidebar(); }
+        }
 
-            if(state.view==='studies') renderStudies(c);
-            else if(state.view==='subscriptions') renderSubscriptions(c);
-            else if(state.view==='clients') renderClients(c);
-            else if(state.view==='collaborators') renderCollaborators(c);
+        // Logic & Render
+        function setView(viewId) {
+            state.view = viewId;
+            state.searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            
+            const sb = document.getElementById('sidebar');
+            if (sb && !sb.classList.contains('sidebar-mobile-closed') && window.innerWidth < 1024) {
+                toggleSidebar();
+            }
+
+            renderSidebar();
+            renderMain();
+        }
+
+        function setViewMode(mode) {
+            state.viewMode = mode;
+            ['list', 'board', 'calendar'].forEach(m => {
+                const btn = document.getElementById(`btn-${m}`);
+                if(m === mode) btn.classList.add('bg-brand-item', 'shadow-sm', 'text-brand-primary');
+                else btn.classList.remove('bg-brand-item', 'shadow-sm', 'text-brand-primary');
+            });
+            renderMain();
+        }
+
+        function applyTheme(name) {
+            state.theme = name; saveData('theme');
+            const c = themesConfig[name]; const r = document.documentElement;
+            r.style.setProperty('--color-primary', c.primary); r.style.setProperty('--color-primary-hover', c.primaryHover);
+            r.style.setProperty('--color-sidebar', c.sidebar); r.style.setProperty('--color-header', c.header);
+            r.style.setProperty('--color-header-text', c.headerText); r.style.setProperty('--color-bg', c.bg);
+            r.style.setProperty('--color-text', c.text); r.style.setProperty('--color-text-muted', c.textMuted);
+            r.style.setProperty('--color-border', c.border); r.style.setProperty('--color-item-bg', c.itemBg);
+            r.style.setProperty('--color-item-hover', c.itemHover);
+            r.style.setProperty('--color-menu-bg', c.menuBg);
+            r.style.setProperty('--color-menu-border', c.menuBorder);
+
+            renderSidebar(); lucide.createIcons();
+            renderUserMenuThemes();
+        }
+
+        function toggleSidebar() {
+            const sb = document.getElementById('sidebar');
+            const ov = document.getElementById('mobile-overlay');
+            sb.classList.toggle('sidebar-mobile-closed');
+            sb.classList.toggle('sidebar-mobile-open');
+            
+            if(sb.classList.contains('sidebar-mobile-open')) {
+                ov.classList.remove('hidden');
+            } else {
+                ov.classList.add('hidden');
+            }
+        }
+
+        function renderSidebar() {
+            const nav = document.getElementById('sidebar-nav'); const proj = document.getElementById('sidebar-projects'); const filt = document.getElementById('sidebar-filters');
+            const cls = (id) => state.view === id ? 'bg-brand-primary/10 text-brand-primary font-bold shadow-sm' : 'text-brand-muted hover:bg-black/5 hover:text-brand-text';
+            nav.innerHTML = [
+                { id: 'inbox', label: 'Bandeja de entrada', icon: 'inbox' }, { id: 'today', label: 'Hoy', icon: 'calendar' },
+                { id: 'upcoming', label: 'Próximamente', icon: 'calendar-days' }, { id: 'studies', label: 'Estudios', icon: 'book-open' },
+                { id: 'subscriptions', label: 'Suscripciones', icon: 'credit-card' }, { id: 'clients', label: 'Clientes', icon: 'users' },
+                { id: 'collaborators', label: 'Colaboradores', icon: 'briefcase' }
+            ].map(i => `<div onclick="setView('${i.id}')" class="flex justify-between px-3 py-2.5 rounded-xl cursor-pointer mb-1 text-sm transition-all font-medium ${cls(i.id)}"><div class="flex gap-3 items-center"><i data-lucide="${i.icon}" class="w-4.5 h-4.5"></i><span>${i.label}</span></div><span class="text-xs opacity-70 font-bold bg-white/50 px-2 py-0.5 rounded-md text-brand-text">${getTaskCount(i.id)||''}</span></div>`).join('');
+            
+            filt.innerHTML = Object.keys(state.priorities).map(p => {
+                const id = `filter-p${p}`; 
+                const meta = state.priorities[p]; 
+                const colorObj = colorPalette.find(c => c.name === meta.color) || colorPalette[8];
+                const iconClass = colorObj.class.split(' ')[0]; 
+
+                return `<div class="group flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer text-sm transition-all font-medium ${state.view === id ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'hover:bg-black/5 text-brand-muted hover:text-brand-text'}">
+                    <div onclick="setView('${id}')" class="flex gap-3 items-center flex-1"><i data-lucide="${meta.icon}" class="w-4 h-4 ${iconClass}"></i><span>${meta.label}</span></div>
+                    <button onclick="openEditPriorityModal('${p}')" class="opacity-0 group-hover:opacity-100 text-brand-muted hover:text-brand-primary p-1"><i data-lucide="settings-2" class="w-3 h-3"></i></button>
+                </div>`;
+            }).join('');
+
+            proj.innerHTML = state.projects.map(p => `
+                <div class="flex justify-between px-3 py-2 rounded-xl cursor-pointer text-sm transition-all group ${state.view === p.id ? 'bg-brand-primary/10 text-brand-primary font-bold' : 'hover:bg-black/5 text-brand-muted hover:text-brand-text'}">
+                    <div onclick="setView('${p.id}')" class="flex gap-3 items-center overflow-hidden flex-1">
+                        <div class="w-2.5 h-2.5 rounded-full flex-shrink-0 ${p.color}"></div><span class="truncate">${p.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openEditProjectModal('${p.id}', event)" class="text-brand-muted hover:text-brand-primary p-1 hover:bg-black/5 rounded"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteProject('${p.id}', event)" class="text-brand-muted hover:text-red-500 p-1 hover:bg-red-50 rounded"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`).join('');
+            lucide.createIcons();
+            
+            // Set active view mode buttons
+            setViewMode(state.viewMode);
+        }
+
+        function renderMain() {
+            const container = document.getElementById('main-container'); const title = document.getElementById('view-title'); const controls = document.getElementById('view-controls');
+            let txt = '';
+            if(state.view === 'inbox') txt = 'Bandeja de Entrada'; else if(state.view === 'studies') txt = 'Zona de Estudio'; else if(state.view === 'subscriptions') txt = 'Suscripciones'; else if(state.view === 'clients') txt = 'Cartera de Clientes'; else if(state.view === 'collaborators') txt = 'Equipo de Trabajo'; else if(state.view === 'today') txt = 'Hoy'; else if(state.view === 'upcoming') txt = 'Próximamente'; 
+            else if(state.view.startsWith('filter-p')) {
+                const p = state.view.split('filter-p')[1];
+                txt = state.priorities[p] ? state.priorities[p].label : 'Prioridad';
+            }
+            else if(state.view.startsWith('filter-collab-')) {
+                const cId = state.view.split('filter-collab-')[1];
+                const c = state.collaborators.find(x => x.id === cId);
+                txt = c ? `Tareas de ${c.name}` : 'Colaborador';
+            } 
+            else { const p = state.projects.find(x => x.id === state.view); txt = p ? p.name : state.view; }
+            
+            if(state.searchQuery) { title.innerText = `Buscar: "${state.searchQuery}"`; controls.style.display = 'none'; }
+            else { 
+                title.innerText = txt; 
+                controls.style.display = (['studies', 'subscriptions', 'clients', 'collaborators'].includes(state.view)) ? 'none' : 'flex'; 
+            }
+
+            if(state.view === 'studies' && !state.searchQuery) renderStudies(container);
+            else if (state.view === 'subscriptions' && !state.searchQuery) renderSubscriptions(container);
+            else if (state.view === 'clients' && !state.searchQuery) renderClients(container);
+            else if (state.view === 'collaborators' && !state.searchQuery) renderCollaborators(container);
             else {
-                if(state.viewMode==='board') renderBoardView(c);
-                else if(state.viewMode==='calendar') renderCalendarView(c);
-                else renderTasks(c);
+                if(state.viewMode === 'board' && !state.searchQuery && state.view !== 'studies') renderBoardView(container);
+                else if(state.viewMode === 'calendar' && !state.searchQuery && state.view !== 'studies') renderCalendarView(container);
+                else renderTasks(container);
             }
-            setTimeout(()=>lucide.createIcons(),50);
+            lucide.createIcons();
         }
 
-        // --- SPECIFIC RENDERERS ---
-        function renderClients(c) {
-            c.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div onclick="openModal('clientModal')" class="bg-white border-2 border-dashed border-gray-200 rounded-2xl h-40 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-orange-500 hover:text-orange-500 transition-all"><i data-lucide="plus" class="w-8 h-8 mb-2"></i><span class="font-bold text-sm uppercase">Nuevo Cliente</span></div>${(state.clients||[]).map(cl => `<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all relative group"><div class="flex justify-between items-start mb-2"><div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-lg">${cl.name?cl.name[0].toUpperCase():'?'}</div><div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><button onclick="openClientDetailsModal('${cl.id}')" class="text-gray-400 hover:text-orange-500 p-1"><i data-lucide="eye" class="w-4 h-4"></i></button><button onclick="openEditClientModal('${cl.id}')" class="text-gray-400 hover:text-orange-500 p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteClient('${cl.id}')" class="text-gray-400 hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><h3 class="font-bold text-gray-800 text-lg truncate">${cl.name}</h3><div class="space-y-1 mt-3 text-xs text-gray-500">${cl.email?`<div><i data-lucide="mail" class="w-3 h-3 inline mr-1"></i>${cl.email}</div>`:''}${cl.phone?`<div><i data-lucide="phone" class="w-3 h-3 inline mr-1"></i>${cl.phone}</div>`:''}</div></div>`).join('')}</div>`;
+        // --- NEW RENDER FUNCTIONS ---
+        function renderCollaborators(container) {
+            container.innerHTML = `
+                <div class="animate-in fade-in space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div onclick="openModal('collaboratorModal')" class="bg-brand-item border-2 border-dashed border-brand-border rounded-2xl h-40 flex flex-col items-center justify-center text-brand-muted cursor-pointer hover:border-brand-primary hover:text-brand-primary transition-all shadow-sm hover:bg-brand-item-hover">
+                            <i data-lucide="plus" class="w-8 h-8 mb-2"></i>
+                            <span class="font-bold text-sm uppercase tracking-widest">Nuevo Colaborador</span>
+                        </div>
+                        ${state.collaborators.map(c => {
+                            const activeTasks = state.tasks.filter(t => t.assignedTo === c.id && !t.completed).length;
+                            return `
+                            <div class="bg-brand-item p-5 rounded-2xl shadow-sm border border-brand-border hover:shadow-md transition-all relative group">
+                                <div class="flex items-center gap-4 mb-4">
+                                    <div class="w-12 h-12 rounded-full bg-brand-primary text-white flex items-center justify-center font-bold text-lg shadow-md">
+                                        ${c.name ? c.name.split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase() : '?'}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-brand-text truncate">${c.name || 'Sin nombre'}</h3>
+                                        <p class="text-xs text-brand-muted truncate">${c.role || ''}</p>
+                                    </div>
+                                    <div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="openEditCollaboratorModal('${c.id}')" class="text-brand-muted hover:text-brand-primary p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                        <button onclick="deleteCollaborator('${c.id}')" class="text-brand-muted hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-brand-muted mb-4 flex items-center gap-2">
+                                    <i data-lucide="mail" class="w-3.5 h-3.5"></i> ${c.email || 'Sin email'}
+                                </div>
+                                <div class="flex items-center justify-between pt-3 border-t border-brand-border">
+                                    <span class="text-xs font-bold text-brand-text">Tareas activas</span>
+                                    <button onclick="setView('filter-collab-${c.id}')" class="bg-black/5 px-2 py-1 rounded-full text-xs font-bold hover:bg-brand-primary hover:text-white transition-colors ${activeTasks > 0 ? 'text-brand-primary' : 'text-brand-muted'}">
+                                        ${activeTasks} Ver
+                                    </button>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>`;
         }
 
-        function renderCollaborators(c) {
-             c.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><div onclick="openModal('collaboratorModal')" class="bg-white border-2 border-dashed border-gray-200 rounded-2xl h-40 flex flex-col items-center justify-center text-gray-400 cursor-pointer hover:border-orange-500 hover:text-orange-500"><i data-lucide="plus" class="w-8 h-8 mb-2"></i><span class="font-bold text-sm uppercase">Nuevo</span></div>${(state.collaborators||[]).map(co => `<div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 group"><div class="flex items-center gap-4 mb-4"><div class="w-12 h-12 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold text-lg">${co.name?co.name[0].toUpperCase():'?'}</div><div class="flex-1"><h3 class="font-bold text-gray-800">${co.name}</h3><p class="text-xs text-gray-500">${co.role}</p></div><div class="flex flex-col gap-1 opacity-0 group-hover:opacity-100"><button onclick="openEditCollaboratorModal('${co.id}')" class="text-gray-400 hover:text-orange-500"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteCollaborator('${co.id}')" class="text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div></div>`).join('')}</div>`;
+        function renderClients(container) {
+            container.innerHTML = `
+                <div class="animate-in fade-in space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div onclick="openModal('clientModal')" class="bg-brand-item border-2 border-dashed border-brand-border rounded-2xl h-40 flex flex-col items-center justify-center text-brand-muted cursor-pointer hover:border-brand-primary hover:text-brand-primary transition-all shadow-sm hover:bg-brand-item-hover">
+                            <i data-lucide="plus" class="w-8 h-8 mb-2"></i>
+                            <span class="font-bold text-sm uppercase tracking-widest">Nuevo Cliente</span>
+                        </div>
+                        ${state.clients.map(c => {
+                            const projectCount = state.projects.filter(p => p.clientId === c.id).length;
+                            const subCount = state.subscriptions.filter(s => s.clientId === c.id).length;
+                            return `
+                            <div class="bg-brand-item p-5 rounded-2xl shadow-sm border border-brand-border hover:shadow-md transition-all relative group">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="w-10 h-10 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary font-bold text-lg">${c.name ? c.name.charAt(0).toUpperCase() : '?'}</div>
+                                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button onclick="openClientDetailsModal('${c.id}')" class="text-brand-muted hover:text-brand-primary p-1 rounded hover:bg-black/5"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                        <button onclick="openEditClientModal('${c.id}')" class="text-brand-muted hover:text-brand-primary p-1 rounded hover:bg-black/5"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                        <button onclick="deleteClient('${c.id}')" class="text-brand-muted hover:text-red-500 p-1 rounded hover:bg-red-50"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                                <h3 class="font-bold text-brand-text text-lg truncate">${c.name || 'Sin Nombre'}</h3>
+                                <div class="space-y-1 mt-3">
+                                    ${c.dni ? `<div class="flex items-center gap-2 text-xs text-brand-muted"><i data-lucide="id-card" class="w-3.5 h-3.5"></i> ${c.dni}</div>` : ''}
+                                    ${c.email ? `<div class="flex items-center gap-2 text-xs text-brand-muted"><i data-lucide="mail" class="w-3.5 h-3.5"></i> ${c.email}</div>` : ''}
+                                    ${c.phone ? `<div class="flex items-center gap-2 text-xs text-brand-muted"><i data-lucide="phone" class="w-3.5 h-3.5"></i> ${c.phone}</div>` : ''}
+                                    ${c.address ? `<div class="flex items-center gap-2 text-xs text-brand-muted truncate"><i data-lucide="map-pin" class="w-3.5 h-3.5"></i> ${c.address}</div>` : ''}
+                                </div>
+                                ${c.notes ? `<div class="mt-3 pt-3 border-t border-brand-border text-xs text-brand-muted italic line-clamp-2">${c.notes}</div>` : ''}
+                                <div class="flex gap-2 mt-4 pt-3 border-t border-brand-border">
+                                    <span class="text-xs font-bold bg-black/5 px-2 py-1 rounded text-brand-text">${projectCount} Proyectos</span>
+                                    <span class="text-xs font-bold bg-black/5 px-2 py-1 rounded text-brand-text">${subCount} Subs.</span>
+                                </div>
+                            </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>`;
         }
 
-        function renderSubscriptions(c) {
-            c.innerHTML = `<div class="space-y-6"><div class="flex justify-end"><button onclick="openModal('subscriptionModal')" class="bg-orange-600 text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md hover:bg-orange-700 flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nueva</button></div><div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden"><table class="w-full text-left text-sm text-gray-700"><thead class="bg-gray-50 font-bold uppercase text-xs text-gray-500"><tr><th class="px-6 py-4">Servicio</th><th class="px-6 py-4">Cliente</th><th class="px-6 py-4">Precio</th><th class="px-6 py-4"></th></tr></thead><tbody>${(state.subscriptions||[]).map(s => { const cl = state.clients.find(x=>x.id===s.clientId); return `<tr class="hover:bg-gray-50 group"><td class="px-6 py-4 font-bold">${s.name}</td><td class="px-6 py-4">${cl?cl.name:'-'}</td><td class="px-6 py-4 font-mono">${s.price}€</td><td class="px-6 py-4 text-right"><div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100"><button onclick="openEditSubscriptionModal('${s.id}')" class="text-gray-400 hover:text-orange-500"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteSubscription('${s.id}')" class="text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></td></tr>`; }).join('')}</tbody></table></div></div>`;
+        function renderSubscriptions(container) {
+            container.innerHTML = `
+                <div class="animate-in fade-in space-y-6">
+                    <div class="flex justify-end mb-4">
+                        <button onclick="openModal('subscriptionModal')" class="bg-brand-primary text-white px-4 py-2 rounded-xl font-bold text-sm shadow-md hover:bg-brand-primary-hover flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Nueva Suscripción
+                        </button>
+                    </div>
+                    <div class="bg-brand-item rounded-2xl shadow-sm border border-brand-border overflow-hidden">
+                        <table class="w-full text-left text-sm text-brand-text">
+                            <thead class="bg-black/5 font-bold uppercase text-xs text-brand-muted">
+                                <tr>
+                                    <th class="px-6 py-4">Servicio</th>
+                                    <th class="px-6 py-4">Cliente</th>
+                                    <th class="px-6 py-4">Precio</th>
+                                    <th class="px-6 py-4">Ciclo</th>
+                                    <th class="px-6 py-4">Renovación</th>
+                                    <th class="px-6 py-4"></th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-brand-border">
+                                ${state.subscriptions.length === 0 ? '<tr><td colspan="6" class="px-6 py-8 text-center text-brand-muted">No hay suscripciones activas</td></tr>' : ''}
+                                ${state.subscriptions.map(s => {
+                                    const client = state.clients.find(c => c.id === s.clientId);
+                                    const clientName = client ? client.name : '<span class="text-brand-muted italic">Sin asignar</span>';
+                                    return `
+                                    <tr class="hover:bg-brand-item-hover transition-colors group">
+                                        <td class="px-6 py-4 align-middle">
+                                            <div class="font-bold">${s.name}</div>
+                                            ${s.desc ? `<div class="text-xs text-brand-muted mt-0.5 max-w-xs truncate">${s.desc}</div>` : ''}
+                                        </td>
+                                        <td class="px-6 py-4 align-middle">${clientName}</td>
+                                        <td class="px-6 py-4 font-mono font-medium align-middle">${s.price} €</td>
+                                        <td class="px-6 py-4 align-middle"><span class="px-2 py-1 rounded bg-black/5 text-xs font-bold uppercase inline-block">${s.cycle === 'monthly' ? 'Mensual' : 'Anual'}</span></td>
+                                        <td class="px-6 py-4 text-brand-muted align-middle">
+                                            <div class="flex items-center gap-2">
+                                                <i data-lucide="calendar" class="w-3.5 h-3.5"></i> ${formatDate(s.nextPayment)}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right align-middle">
+                                            <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onclick="openEditSubscriptionModal('${s.id}')" class="text-brand-muted hover:text-brand-primary p-1"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                                                <button onclick="deleteSubscription('${s.id}')" class="text-brand-muted hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
         }
 
-        function renderTasks(c) {
-            const filtered = getFilteredTasks();
-            if(!filtered.length) { c.innerHTML = `<div class="flex flex-col items-center justify-center py-24 text-center text-gray-400"><div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6"><i data-lucide="check-circle-2" class="w-12 h-12"></i></div><p class="font-bold text-lg">Todo limpio</p></div>`; return; }
-            c.innerHTML = `<div class="space-y-3 pb-32 animate-in fade-in">${filtered.map(t => { const pm = getPrioStyle(t.priority); return `<div class="group flex items-start gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-move"><button onclick="toggleTask(${t.id})" class="mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${t.completed ? 'bg-orange-600 border-orange-600' : 'border-gray-300 hover:border-orange-600'}"><i data-lucide="check" class="w-3.5 h-3.5 text-white ${t.completed?'':'opacity-0'}"></i></button><div class="flex-1 cursor-pointer" onclick="openEditModal(${t.id})"><div class="text-base font-semibold text-gray-800 ${t.completed?'line-through text-gray-400':''}">${t.content}</div><div class="flex gap-3 mt-3 text-xs font-medium items-center text-gray-500"><span class="flex items-center gap-1 bg-gray-50 px-2 py-1 rounded"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(t.date)}</span><span class="flex items-center gap-1 px-2 py-1 rounded ${pm.class}"><i data-lucide="${pm.icon}" class="w-3 h-3"></i> ${pm.label}</span></div></div><div class="flex items-center gap-2 opacity-0 group-hover:opacity-100"><button onclick="openEditModal(${t.id})" class="text-gray-400 hover:text-orange-600 p-2"><i data-lucide="pencil" class="w-4 h-4"></i></button><button onclick="deleteTask(${t.id})" class="text-gray-400 hover:text-red-500 p-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div>`; }).join('')}</div>`;
-        }
-
-        // --- ACTIONS ---
-        function openEditClientModal(id) {
-            const c = state.clients.find(x => x.id === id); if(!c) return;
-            state.editingClientId = id;
-            document.getElementById('clientModalTitle').innerText = 'Editar Cliente';
-            document.getElementById('clientNameInput').value = c.name;
-            document.getElementById('clientEmailInput').value = c.email||'';
-            document.getElementById('clientPhoneInput').value = c.phone||'';
-            document.getElementById('clientDniInput').value = c.dni||'';
-            document.getElementById('clientAddressInput').value = c.address||'';
-            document.getElementById('clientNotesInput').value = c.notes||'';
-            document.getElementById('clientModalBtn').innerText = 'Guardar Cambios';
-            openModal('clientModal');
-        }
-
-        function deleteClient(id) {
-            if(confirm("¿Eliminar cliente?")) {
-                state.clients = state.clients.filter(c => c.id !== id);
-                saveData('clients'); renderMain(); showToast('Eliminado');
-            }
+        // --- Drag & Drop Logic ---
+        function allowDrop(ev) { ev.preventDefault(); }
+        
+        function drag(ev, id) { 
+            ev.dataTransfer.setData("text/plain", id); 
+            ev.dataTransfer.effectAllowed = "move";
         }
         
-        function openClientDetailsModal(id) {
-            const c = state.clients.find(x=>x.id===id); if(!c) return;
-            document.getElementById('clientDetailsName').innerText = c.name;
-            const projs = state.projects.filter(p => p.clientId === id);
-            const subs = state.subscriptions.filter(s => s.clientId === id);
-            document.getElementById('clientDetailsProjects').innerHTML = projs.length ? projs.map(p=>`<div class="p-2 bg-gray-50 rounded mb-1 text-sm border-l-4 ${p.color.replace('bg-','border-')}">${p.name}</div>`).join('') : '<p class="text-xs text-gray-400">Sin proyectos</p>';
-            document.getElementById('clientDetailsSubs').innerHTML = subs.length ? subs.map(s=>`<div class="p-2 bg-gray-50 rounded mb-1 text-sm flex justify-between"><span>${s.name}</span><span class="font-mono">${s.price}€</span></div>`).join('') : '<p class="text-xs text-gray-400">Sin suscripciones</p>';
-            openModal('clientDetailsModal');
+        // Calendar Drop
+        function dropTask(ev, dateStr) {
+            ev.preventDefault();
+            const id = parseInt(ev.dataTransfer.getData("text/plain"));
+            const task = state.tasks.find(t => t.id === id);
+            
+            if(task) {
+                let newDate = dateStr;
+                if(task.date && task.date.includes('T')) { newDate += 'T' + task.date.split('T')[1]; }
+                task.date = newDate;
+                saveData('tasks');
+                showToast('Tarea reagendada 🗓️');
+                renderMain();
+            }
+        }
+
+        // Kanban Drop (Change Project)
+        function dropTaskToProject(ev, projectId) {
+            ev.preventDefault();
+            ev.stopPropagation(); // Stop bubbling
+            const id = parseInt(ev.dataTransfer.getData("text/plain"));
+            const task = state.tasks.find(t => t.id === id);
+            if(task) {
+                task.projectId = projectId;
+                saveData('tasks');
+                showToast('Proyecto actualizado 📂');
+                renderMain();
+            }
+        }
+
+        // List Reorder Drop
+        function dropTaskReorder(ev, targetId) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            const srcId = parseInt(ev.dataTransfer.getData("text/plain"));
+            if(srcId === targetId) return; // Dropped on self
+
+            const srcIdx = state.tasks.findIndex(t => t.id === srcId);
+            const tgtIdx = state.tasks.findIndex(t => t.id === targetId);
+
+            if(srcIdx > -1 && tgtIdx > -1) {
+                // Move item in array
+                const newTasks = [...state.tasks];
+                const [movedItem] = newTasks.splice(srcIdx, 1);
+                newTasks.splice(tgtIdx, 0, movedItem);
+                state.tasks = newTasks;
+                
+                saveData('tasks');
+                renderMain();
+            }
+        }
+
+        function renderTasks(container) {
+            const filtered = getFilteredTasks();
+            let html = `<div class="mb-6 sticky top-0 z-10 bg-brand-bg pt-2 pb-2"><div class="flex items-center gap-3 bg-brand-item p-3.5 rounded-2xl border border-brand-border shadow-sm focus-within:shadow-md focus-within:ring-2 focus-within:ring-brand-primary/20 transition-all"><i data-lucide="plus" class="w-5 h-5 text-brand-primary"></i><input type="text" placeholder="Añadir tarea rápida..." class="flex-1 bg-transparent outline-none text-sm font-medium text-brand-text placeholder-brand-muted" onkeydown="if(event.key==='Enter') { addQuickTask(this.value); this.value=''; }"></div></div>`;
+            if(filtered.length === 0) { html += `<div class="flex flex-col items-center justify-center py-24 text-center text-brand-muted animate-in fade-in"><div class="w-24 h-24 bg-black/5 rounded-full flex items-center justify-center mb-6 opacity-60"><i data-lucide="check-circle-2" class="w-12 h-12 text-brand-muted"></i></div><p class="font-bold text-lg">${state.searchQuery ? 'Sin resultados' : 'Todo despejado'}</p></div>`; } 
+            else {
+                html += `<div class="space-y-3 pb-32 animate-in fade-in">${filtered.map(task => {
+                    const pm = getPrioStyle(task.priority);
+                    const assignee = state.collaborators.find(c => c.id === task.assignedTo);
+                    
+                    return `<div class="group flex items-start gap-4 bg-brand-item p-4 rounded-2xl shadow-sm border border-brand-border hover:shadow-md transition-all hover:translate-x-1 cursor-move" 
+                        draggable="true" 
+                        ondragstart="drag(event, ${task.id})"
+                        ondragover="allowDrop(event)" 
+                        ondrop="dropTaskReorder(event, ${task.id})">
+                        <button onclick="toggleTask(${task.id})" class="mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 ${task.completed ? 'bg-brand-primary border-brand-primary' : 'border-gray-300 hover:border-brand-primary text-transparent'}"><i data-lucide="check" class="w-3.5 h-3.5 text-white ${task.completed?'':'opacity-0'}"></i></button>
+                        <div class="flex-1 min-w-0 cursor-pointer" onclick="openEditModal(${task.id})">
+                            <div class="text-base font-semibold text-brand-text ${task.completed?'line-through text-brand-muted':''}">${task.content}</div>
+                            <div class="text-sm text-brand-muted mt-1 truncate">${task.description||''}</div>
+                            <div class="flex gap-3 mt-3 text-xs font-medium items-center flex-wrap">
+                                ${task.date?`<span class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-black/5 text-brand-muted border border-black/5"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(task.date)}</span>`:''}
+                                <span class="flex items-center gap-1.5 px-2 py-1 rounded-md ${pm.class}"><i data-lucide="${pm.icon}" class="w-3 h-3"></i> ${pm.label}</span>
+                                ${assignee ? `
+                                    <span class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-brand-primary/10 text-brand-primary border border-brand-primary/10" title="Asignado a ${assignee.name}">
+                                        <div class="w-4 h-4 rounded-full bg-brand-primary text-white flex items-center justify-center text-[8px] font-bold">${assignee.name[0]}</div> 
+                                        ${assignee.name.split(' ')[0]}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openEditModal(${task.id})" class="text-brand-muted hover:text-brand-primary p-2 hover:bg-black/5 rounded-lg"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            <button onclick="deleteTask(${task.id})" class="text-brand-muted hover:text-red-500 p-2 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>`;
+                }).join('')}</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        function renderBoardView(container) {
+             const filtered = getFilteredTasks();
+            const groups = [{id:'inbox', name:'Sin Proyecto', color:'bg-gray-400'}, ...state.projects];
+            container.innerHTML = `<div class="flex gap-4 overflow-x-auto pb-6 h-full p-1">${groups.map(g => {
+                const gTasks = filtered.filter(t => t.projectId === g.id || (g.id === 'inbox' && !state.projects.find(p => p.id === t.projectId)));
+                return `<div class="min-w-[300px] w-[300px] bg-black/5 rounded-2xl flex flex-col max-h-full border border-black/5 shadow-sm" ondragover="allowDrop(event)" ondrop="dropTaskToProject(event, '${g.id}')"><div class="p-4 font-bold text-sm text-brand-text border-b border-black/5 flex items-center gap-2 bg-brand-item/50 rounded-t-2xl backdrop-blur-sm"><div class="w-2.5 h-2.5 rounded-full ${g.color||'bg-gray-400'}"></div>${g.name}<span class="ml-auto text-xs bg-brand-item shadow-sm text-brand-muted px-2 py-0.5 rounded-full border border-black/5 font-bold">${gTasks.length}</span></div><div class="p-3 overflow-y-auto flex-1 space-y-3 custom-scrollbar">${gTasks.map(t => {
+                     const pm = getPrioStyle(t.priority);
+                     const iconColor = pm.class.split(' ')[0]; 
+                     const assignee = state.collaborators.find(c => c.id === t.assignedTo);
+                     return `<div class="bg-brand-item p-4 rounded-xl shadow-sm border border-brand-border hover:shadow-md transition-all group cursor-move" draggable="true" ondragstart="drag(event, ${t.id})" onclick="openEditModal(${t.id})"><div class="text-sm font-bold text-brand-text mb-1 ${t.completed ? 'line-through text-brand-muted':''}">${t.content}</div>
+                     <div class="flex justify-between items-center text-xs text-brand-muted mt-2">
+                        <span>${t.date ? formatDate(t.date) : ''}</span>
+                        <div class="flex items-center gap-2">
+                            ${assignee ? `<div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] font-bold border border-white shadow-sm" title="${assignee.name}">${assignee.name[0]}</div>` : ''}
+                            <i data-lucide="${pm.icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
+                        </div>
+                     </div></div>`;
+                }).join('')}</div></div>`;
+            }).join('')}</div>`;
+        }
+
+        // ... existing renderCalendarView and renderStudies ...
+        function renderCalendarView(container) {
+             const year = state.calendarDate.getFullYear(); const month = state.calendarDate.getMonth(); const daysInMonth = new Date(year, month + 1, 0).getDate(); const firstDay = new Date(year, month, 1).getDay(); const blankDays = firstDay === 0 ? 6 : firstDay - 1; const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"]; const days = Array.from({length: daysInMonth}, (_, i) => i + 1); const tasks = getFilteredTasks();
+            container.innerHTML = `<div class="h-full flex flex-col bg-brand-item rounded-2xl shadow-sm border border-brand-border overflow-hidden"><div class="flex items-center justify-between p-5 border-b border-brand-border"><span class="font-bold text-xl text-brand-text tracking-tight">${months[month]} ${year}</span><div class="flex gap-1 bg-black/5 p-1 rounded-lg"><button onclick="changeMonth(-1)" class="p-1 hover:bg-brand-item hover:shadow-sm rounded transition-all text-brand-muted hover:text-brand-text"><i data-lucide="chevron-left" class="w-5 h-5"></i></button><button onclick="resetMonth()" class="px-3 text-sm font-bold hover:bg-brand-item hover:shadow-sm rounded transition-all text-brand-muted hover:text-brand-text">Hoy</button><button onclick="changeMonth(1)" class="p-1 hover:bg-brand-item hover:shadow-sm rounded transition-all text-brand-muted hover:text-brand-text"><i data-lucide="chevron-right" class="w-5 h-5"></i></button></div></div><div class="grid grid-cols-7 bg-black/5 border-b border-brand-border text-center py-3 text-xs font-bold text-brand-muted"><div>LUN</div><div>MAR</div><div>MIE</div><div>JUE</div><div>VIE</div><div>SAB</div><div>DOM</div></div><div class="grid grid-cols-7 flex-1 overflow-y-auto bg-black/5 gap-px border-b border-brand-border">${Array(blankDays).fill('<div class="bg-brand-item min-h-[120px]"></div>').join('')}${days.map(d => { const dStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const dTasks = tasks.filter(t => t.date && t.date.startsWith(dStr)); const isToday = dStr === new Date().toISOString().split('T')[0]; return `<div class="bg-brand-item min-h-[120px] p-2 flex flex-col gap-1 relative group hover:bg-brand-item-hover transition-colors ${isToday ? 'bg-brand-primary/5' : ''}" onclick="openAddTaskModal('${dStr}')" ondragover="allowDrop(event)" ondrop="dropTask(event, '${dStr}')"><span class="text-xs font-bold w-7 h-7 flex items-center justify-center rounded-full mb-1 ${isToday ? 'bg-brand-primary text-white shadow-md' : 'text-brand-muted'}">${d}</span><div class="flex-1 overflow-y-auto custom-scrollbar space-y-1">${dTasks.map(t => `<div class="text-[10px] font-medium bg-brand-item border border-brand-border p-1.5 rounded-lg truncate cursor-pointer hover:border-brand-primary hover:text-brand-primary shadow-sm transition-all hover:scale-[1.02] cursor-move text-brand-text" draggable="true" ondragstart="drag(event, ${t.id})" onclick="event.stopPropagation(); toggleTask(${t.id})">${t.content}</div>`).join('')}</div><div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i data-lucide="plus" class="w-4 h-4 text-brand-muted hover:text-brand-primary"></i></div></div>` }).join('')}</div></div>`;
+        }
+
+        function renderStudies(container) {
+             const mins = Math.floor(state.timer.time / 60).toString().padStart(2, '0'); const secs = (state.timer.time % 60).toString().padStart(2, '0'); const focusBtnClass = state.timer.mode === 'focus' ? 'bg-brand-primary text-white shadow-lg ring-2 ring-brand-primary/20' : 'bg-brand-item text-brand-muted hover:bg-brand-item-hover border border-brand-border'; const breakBtnClass = state.timer.mode === 'break' ? 'bg-blue-500 text-white shadow-lg ring-2 ring-blue-500/20' : 'bg-brand-item text-brand-muted hover:bg-brand-item-hover border border-brand-border';
+            // Safety check for notes
+            const notesList = Array.isArray(state.notes) ? state.notes : [];
+            
+            container.innerHTML = `<div class="flex flex-col gap-8 animate-in fade-in pb-10"><div id="timer-widget-container" class="bg-brand-item rounded-3xl shadow-lg border border-brand-border p-8 flex flex-col gap-8 relative overflow-visible bg-gradient-to-br from-brand-item to-brand-sidebar"><button onclick="toggleTimerSettings()" class="absolute top-6 right-6 p-2 text-brand-muted hover:text-brand-text hover:bg-brand-item rounded-full transition-colors z-20 shadow-sm border border-transparent hover:border-brand-border" title="Configurar Tiempos"><i data-lucide="settings" class="w-5 h-5"></i></button><div id="timerSettingsPanel" class="${state.isTimerSettingsOpen ? '' : 'hidden'} absolute top-16 right-6 bg-brand-item rounded-2xl shadow-2xl border border-brand-border p-5 w-72 z-30 animate-in fade-in zoom-in-95 origin-top-right"><h4 class="font-bold text-brand-text text-sm mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Ajustar Temporizador</h4><div class="space-y-4"><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Productivo</label><span class="text-xs font-bold text-brand-primary" id="setting-val-focus">${state.tempSettings.focus} min</span></div><input type="range" min="1" max="90" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" value="${state.tempSettings.focus}" oninput="updateTempSetting('focus', this.value)"></div><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Descanso</label><span class="text-xs font-bold text-blue-500" id="setting-val-break">${state.tempSettings.break} min</span></div><input type="range" min="1" max="30" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-blue-500" value="${state.tempSettings.break}" oninput="updateTempSetting('break', this.value)"></div><button onclick="saveTimerSettings()" class="w-full py-2.5 rounded-xl text-white text-xs font-bold bg-brand-primary hover:bg-brand-primary-hover shadow-md transition-colors mt-2">Guardar Configuración</button></div></div><div class="flex gap-4 justify-center md:justify-start"><button onclick="switchTimerMode('focus')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${focusBtnClass}"><i data-lucide="brain-circuit" class="w-5 h-5"></i> Estudio (${state.timerSettings.focus}m)</button><button onclick="switchTimerMode('break')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${breakBtnClass}"><i data-lucide="coffee" class="w-5 h-5"></i> Descanso (${state.timerSettings.break}m)</button></div><div class="flex flex-col md:flex-row items-center justify-between gap-8"><div class="flex items-center gap-8"><div><h2 class="text-8xl font-black text-brand-text tracking-tighter tabular-nums leading-none drop-shadow-sm" id="timer-display">${mins}:${secs}</h2><p class="text-sm font-bold text-brand-muted uppercase tracking-widest mt-2 ml-2">${state.timer.mode === 'focus' ? 'Tiempo de Enfoque' : 'Tiempo de Relax'}</p></div></div><div class="flex gap-4"><button onclick="toggleTimer()" class="w-24 h-24 rounded-3xl ${state.timer.mode === 'focus' ? 'bg-brand-primary hover:bg-brand-primary-hover' : 'bg-blue-500 hover:bg-blue-600'} text-white flex items-center justify-center transition-transform shadow-2xl hover:shadow-3xl active:scale-95 border-4 border-white"><i data-lucide="${state.timer.isActive ? 'pause' : 'play'}" class="w-10 h-10 fill-current ml-1"></i></button><button onclick="resetTimer()" class="w-24 h-24 rounded-3xl bg-brand-item text-brand-muted border-2 border-black/5 flex items-center justify-center hover:bg-brand-item-hover hover:text-brand-text shadow-lg hover:shadow-xl transition-all active:scale-95"><i data-lucide="rotate-ccw" class="w-8 h-8"></i></button></div></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full"><div class="bg-brand-item border border-brand-border rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-brand-border font-bold flex gap-3 items-center text-brand-text bg-black/5"><i data-lucide="graduation-cap" class="w-5 h-5 text-brand-primary"></i> Tareas de Estudio</div><div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/5" id="study-tasks-list">${state.tasks.filter(t => t.projectId === 'studies').map(t => `<div class="flex items-center gap-3 bg-brand-item p-4 rounded-2xl border border-brand-border shadow-sm hover:shadow-md transition-all"><button onclick="toggleTask(${t.id})" class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${t.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-200 hover:border-brand-primary'}"><i data-lucide="check" class="w-3.5 h-3.5"></i></button><span class="flex-1 text-sm font-medium ${t.completed?'line-through text-brand-muted':'text-brand-text'}">${t.content}</span><button onclick="deleteTask(${t.id})" class="text-brand-muted hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div><div class="p-4 border-t border-brand-border bg-brand-item"><div class="flex items-center gap-3 bg-black/5 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand-primary focus-within:bg-brand-item focus-within:shadow-md transition-all"><i data-lucide="plus" class="w-5 h-5 text-brand-muted"></i><input type="text" placeholder="Añadir tarea..." class="flex-1 bg-transparent text-sm font-medium outline-none text-brand-text placeholder-brand-muted" onkeydown="if(event.key==='Enter') addStudyTask(this)"></div></div></div><div class="bg-amber-50/30 border border-amber-100 rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-amber-100/50 font-bold text-amber-900 flex gap-3 items-center bg-amber-50/50"><i data-lucide="book-open" class="w-5 h-5 text-amber-600"></i> Apuntes</div><div class="p-5 grid grid-cols-2 gap-4 overflow-y-auto custom-scrollbar"><div onclick="addNotePrompt()" class="border-2 border-dashed border-amber-200/60 rounded-2xl flex flex-col items-center justify-center text-amber-400 cursor-pointer hover:bg-amber-50 hover:border-amber-300 hover:text-amber-600 transition-all h-36 bg-white/60"><i data-lucide="plus" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Nueva Nota</span></div>${notesList.map(n => `<div class="bg-white p-4 rounded-2xl shadow-sm border border-amber-100/50 text-xs h-36 overflow-hidden relative group hover:shadow-lg transition-all hover:-translate-y-1"><h4 class="font-bold text-gray-800 mb-2 truncate text-sm border-b border-gray-50 pb-2">${n.title}</h4><p class="text-gray-500 leading-relaxed line-clamp-4">${n.content}</p><button onclick="deleteNote(${n.id})" class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`).join('')}</div></div></div></div>`;
+        }
+
+        // --- NEW MODAL & EDIT FUNCTIONS ---
+        function openEditProjectModal(projectId, e) {
+            e.stopPropagation();
+            const project = state.projects.find(p => p.id === projectId);
+            if (!project) return;
+            state.editingProjectId = projectId;
+            state.tempProjectColor = project.color; // Init temp color
+            openModal('projectModal');
+            document.getElementById('projectModalTitle').innerText = 'Editar Proyecto';
+            document.getElementById('newProjectInput').value = project.name;
+            // Set client select
+            const clientSelect = document.getElementById('newProjectClient');
+            if(clientSelect) {
+                clientSelect.value = project.clientId || "";
+            }
+            document.getElementById('projectModalBtn').innerText = 'Guardar';
+            renderProjectColorPicker(); // Render picker with selection
+        }
+
+        function openEditClientModal(id) {
+            const client = state.clients.find(c => c.id === id);
+            if(!client) return;
+            state.editingClientId = id;
+            openModal('clientModal');
+            document.getElementById('clientModalTitle').innerText = 'Editar Cliente';
+            document.getElementById('clientNameInput').value = client.name;
+            document.getElementById('clientEmailInput').value = client.email || '';
+            document.getElementById('clientPhoneInput').value = client.phone || '';
+            document.getElementById('clientDniInput').value = client.dni || '';
+            document.getElementById('clientAddressInput').value = client.address || '';
+            document.getElementById('clientNotesInput').value = client.notes || '';
+            document.getElementById('clientModalBtn').innerText = 'Guardar Cambios';
         }
 
         function openEditSubscriptionModal(id) {
-            const s = state.subscriptions.find(x=>x.id===id); if(!s) return;
+            const sub = state.subscriptions.find(s => s.id === id);
+            if(!sub) return;
             state.editingSubId = id;
-            document.getElementById('subNameInput').value = s.name;
-            document.getElementById('subPriceInput').value = s.price;
-            document.getElementById('subClientInput').value = s.clientId;
-            document.getElementById('subDateInput').value = s.nextPayment;
             openModal('subscriptionModal');
+            document.getElementById('subModalTitle').innerText = 'Editar Suscripción';
+            document.getElementById('subNameInput').value = sub.name;
+            document.getElementById('subDescInput').value = sub.desc || '';
+            document.getElementById('subPriceInput').value = sub.price;
+            document.getElementById('subCycleInput').value = sub.cycle;
+            document.getElementById('subClientInput').value = sub.clientId || '';
+            document.getElementById('subDateInput').value = sub.nextPayment || '';
+            document.getElementById('subModalBtn').innerText = 'Guardar Cambios';
         }
-        function deleteSubscription(id) {
-            if(confirm("¿Borrar?")) { state.subscriptions=state.subscriptions.filter(x=>x.id!==id); saveData('subscriptions'); renderMain(); }
-        }
+
         function openEditCollaboratorModal(id) {
-            const c = state.collaborators.find(x=>x.id===id); if(!c) return;
+            const collab = state.collaborators.find(c => c.id === id);
+            if(!collab) return;
             state.editingCollabId = id;
-            document.getElementById('collabNameInput').value=c.name;
-            document.getElementById('collabRoleInput').value=c.role;
-            document.getElementById('collabEmailInput').value=c.email;
             openModal('collaboratorModal');
+            document.getElementById('collabNameInput').value = collab.name;
+            document.getElementById('collabRoleInput').value = collab.role;
+            document.getElementById('collabEmailInput').value = collab.email || '';
+            document.getElementById('collabModalBtn').innerText = 'Guardar Cambios';
         }
-        function deleteCollaborator(id) {
-            if(confirm("¿Borrar?")) { state.collaborators=state.collaborators.filter(x=>x.id!==id); saveData('collaborators'); renderMain(); }
+
+        function openClientDetailsModal(id) {
+            const client = state.clients.find(c => c.id === id);
+            if(!client) return;
+            
+            const projects = state.projects.filter(p => p.clientId === id);
+            const subs = state.subscriptions.filter(s => s.clientId === id);
+            
+            document.getElementById('clientDetailsName').innerText = client.name;
+            
+            // Render Projects
+            const projectsContainer = document.getElementById('clientDetailsProjects');
+            if(projects.length === 0) {
+                projectsContainer.innerHTML = '<p class="text-sm text-brand-muted italic">Sin proyectos asignados.</p>';
+            } else {
+                projectsContainer.innerHTML = projects.map(p => `
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-black/5">
+                        <div class="w-3 h-3 rounded-full ${p.color}"></div>
+                        <span class="font-bold text-sm text-brand-text">${p.name}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Render Subs
+            const subsContainer = document.getElementById('clientDetailsSubs');
+            if(subs.length === 0) {
+                subsContainer.innerHTML = '<p class="text-sm text-brand-muted italic">Sin suscripciones activas.</p>';
+            } else {
+                subsContainer.innerHTML = subs.map(s => `
+                    <div class="flex justify-between items-center p-3 rounded-xl bg-black/5">
+                        <div>
+                            <div class="font-bold text-sm text-brand-text">${s.name}</div>
+                            <div class="text-xs text-brand-muted">${s.price}€ / ${s.cycle === 'monthly' ? 'Mes' : 'Año'}</div>
+                        </div>
+                        <div class="text-xs text-brand-muted font-mono bg-white px-2 py-1 rounded border border-gray-200">
+                            Renueva: ${formatDate(s.nextPayment)}
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            openModal('clientDetailsModal');
+        }
+
+        function openModal(id) { 
+            if(id === 'taskModal') { 
+                const select = document.getElementById('newTaskProject');
+                const prioSelect = document.getElementById('newTaskPriority');
+                const assignSelect = document.getElementById('newTaskAssignee');
+
+                // Populate Projects
+                if(select) select.innerHTML = `<option value="inbox">📥 Bandeja</option>` + state.projects.map(p => `<option value="${p.id}"># ${p.name}</option>`).join('');
+                
+                // Populate Priorities (Dynamic now)
+                if(prioSelect) {
+                    prioSelect.innerHTML = Object.keys(state.priorities).map(k => {
+                        const p = state.priorities[k];
+                        return `<option value="${k}">${p.label}</option>`;
+                    }).join('');
+                }
+
+                // Populate Assignees
+                if(assignSelect) {
+                    assignSelect.innerHTML = `<option value="">Sin asignar</option>` + state.collaborators.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+
+                if (!state.editingTaskId && document.getElementById('newTaskInput').value === '') {
+                    document.getElementById('newTaskDesc').value = '';
+                    document.getElementById('newTaskDate').value = '';
+                }
+            }
+            if (id === 'projectModal') {
+                const clientSelect = document.getElementById('newProjectClient');
+                if(clientSelect) {
+                    clientSelect.innerHTML = `<option value="">Sin cliente</option>` + state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+                
+                if(!state.editingProjectId) {
+                    // New Project Reset
+                    document.getElementById('projectModalTitle').innerText = 'Nuevo Proyecto';
+                    document.getElementById('newProjectInput').value = '';
+                    document.getElementById('projectModalBtn').innerText = 'Crear';
+                    if(clientSelect) clientSelect.value = "";
+                    state.tempProjectColor = 'bg-gray-500'; // Default
+                    renderProjectColorPicker();
+                }
+            }
+            if (id === 'collaboratorModal') {
+                if(!state.editingCollabId) {
+                    document.getElementById('collabNameInput').value = '';
+                    document.getElementById('collabRoleInput').value = '';
+                    document.getElementById('collabEmailInput').value = '';
+                    document.getElementById('collabModalBtn').innerText = 'Guardar';
+                }
+            }
+            // ... existing modal logic ...
+            if (id === 'clientModal' && !state.editingClientId) {
+                document.getElementById('clientModalTitle').innerText = 'Nuevo Cliente';
+                document.getElementById('clientNameInput').value = '';
+                document.getElementById('clientEmailInput').value = '';
+                document.getElementById('clientPhoneInput').value = '';
+                document.getElementById('clientDniInput').value = '';
+                document.getElementById('clientAddressInput').value = '';
+                document.getElementById('clientNotesInput').value = '';
+                document.getElementById('clientModalBtn').innerText = 'Guardar';
+            }
+            if (id === 'subscriptionModal') {
+                const subClientSelect = document.getElementById('subClientInput');
+                if(subClientSelect) {
+                    subClientSelect.innerHTML = `<option value="">Seleccionar cliente...</option>` + state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                }
+                
+                if(!state.editingSubId) {
+                    document.getElementById('subModalTitle').innerText = 'Nueva Suscripción';
+                    document.getElementById('subNameInput').value = '';
+                    document.getElementById('subDescInput').value = '';
+                    document.getElementById('subPriceInput').value = '';
+                    document.getElementById('subCycleInput').value = 'monthly';
+                    document.getElementById('subDateInput').value = '';
+                    if(subClientSelect) subClientSelect.value = '';
+                    document.getElementById('subModalBtn').innerText = 'Guardar';
+                }
+            }
+            document.getElementById(id).classList.remove('hidden'); 
+        }
+
+        function closeModal(id) { 
+            document.getElementById(id).classList.add('hidden'); 
+            if(id === 'taskModal') {
+                document.getElementById('newTaskInput').value = '';
+                document.getElementById('newTaskDesc').value = '';
+                state.editingTaskId = null;
+            }
+            if(id === 'projectModal') {
+                state.editingProjectId = null;
+                document.getElementById('newProjectInput').value = '';
+            }
+            if(id === 'priorityModal') {
+                state.editingPrioId = null;
+            }
+            if(id === 'clientModal') {
+                state.editingClientId = null;
+            }
+            if(id === 'subscriptionModal') {
+                state.editingSubId = null;
+            }
+            if(id === 'collaboratorModal') {
+                state.editingCollabId = null;
+            }
+        }
+
+        function selectProjectColor(colorClass) {
+            state.tempProjectColor = colorClass;
+            renderProjectColorPicker();
+        }
+
+        function saveProject() {
+            const name = document.getElementById('newProjectInput').value;
+            const clientId = document.getElementById('newProjectClient').value;
+            if(!name) return;
+
+            if(state.editingProjectId) {
+                const index = state.projects.findIndex(p => p.id === state.editingProjectId);
+                if(index !== -1) {
+                    state.projects[index].name = name;
+                    state.projects[index].color = state.tempProjectColor;
+                    state.projects[index].clientId = clientId;
+                    showToast('Proyecto actualizado');
+                }
+            } else {
+                state.projects.push({id: Date.now().toString(), name: name, color: state.tempProjectColor, clientId: clientId});
+                showToast('Proyecto creado');
+            }
+            saveData('projects');
+            closeModal('projectModal');
         }
 
         function saveClient() {
-            const name = document.getElementById('clientNameInput').value; if(!name) return;
-            const c = { id: state.editingClientId || Date.now().toString(), name, email: document.getElementById('clientEmailInput').value, phone: document.getElementById('clientPhoneInput').value, dni: document.getElementById('clientDniInput').value, address: document.getElementById('clientAddressInput').value, notes: document.getElementById('clientNotesInput').value };
-            if(state.editingClientId) { const idx=state.clients.findIndex(x=>x.id===state.editingClientId); if(idx!==-1) state.clients[idx]=c; } else state.clients.push(c);
-            saveData('clients'); closeModal('clientModal'); renderMain(); showToast('Guardado');
+            const name = document.getElementById('clientNameInput').value;
+            const email = document.getElementById('clientEmailInput').value;
+            const phone = document.getElementById('clientPhoneInput').value;
+            const dni = document.getElementById('clientDniInput').value;
+            const address = document.getElementById('clientAddressInput').value;
+            const notes = document.getElementById('clientNotesInput').value;
+            
+            if(!name) return;
+            
+            if(state.editingClientId) {
+                const index = state.clients.findIndex(c => c.id === state.editingClientId);
+                if(index !== -1) {
+                    state.clients[index] = { ...state.clients[index], name, email, phone, dni, address, notes };
+                    showToast('Cliente actualizado');
+                }
+            } else {
+                state.clients.push({
+                    id: Date.now().toString(),
+                    name, email, phone, dni, address, notes
+                });
+                showToast('Cliente guardado');
+            }
+            
+            saveData('clients');
+            renderMain();
+            closeModal('clientModal');
         }
-        function saveSubscription() {
-            const name = document.getElementById('subNameInput').value; if(!name) return;
-            const s = { id: state.editingSubId || Date.now().toString(), name, price: document.getElementById('subPriceInput').value, clientId: document.getElementById('subClientInput').value, nextPayment: document.getElementById('subDateInput').value };
-            if(state.editingSubId) { const idx=state.subscriptions.findIndex(x=>x.id===state.editingSubId); if(idx!==-1) state.subscriptions[idx]=s; } else state.subscriptions.push(s);
-            saveData('subscriptions'); closeModal('subscriptionModal'); renderMain(); showToast('Guardado');
-        }
+
         function saveCollaborator() {
-            const name = document.getElementById('collabNameInput').value; if(!name) return;
-            const c = { id: state.editingCollabId || Date.now().toString(), name, role: document.getElementById('collabRoleInput').value, email: document.getElementById('collabEmailInput').value };
-            if(state.editingCollabId) { const idx=state.collaborators.findIndex(x=>x.id===state.editingCollabId); if(idx!==-1) state.collaborators[idx]=c; } else state.collaborators.push(c);
-            saveData('collaborators'); closeModal('collaboratorModal'); renderMain(); showToast('Guardado');
+            const name = document.getElementById('collabNameInput').value;
+            const role = document.getElementById('collabRoleInput').value;
+            const email = document.getElementById('collabEmailInput').value;
+            
+            if(!name) return;
+            
+            if(state.editingCollabId) {
+                const index = state.collaborators.findIndex(c => c.id === state.editingCollabId);
+                if(index !== -1) {
+                    state.collaborators[index] = { ...state.collaborators[index], name, role, email };
+                    showToast('Colaborador actualizado');
+                }
+            } else {
+                state.collaborators.push({
+                    id: Date.now().toString(),
+                    name, role, email
+                });
+                showToast('Colaborador añadido');
+            }
+            
+            saveData('collaborators');
+            renderMain();
+            closeModal('collaboratorModal');
+        }
+
+        function deleteCollaborator(id) {
+            showConfirm('¿Borrar colaborador?', (confirmed) => {
+                if(confirmed) {
+                    state.collaborators = state.collaborators.filter(c => c.id !== id);
+                    saveData('collaborators');
+                    renderMain();
+                    showToast('Colaborador eliminado');
+                }
+            });
+        }
+
+        function saveSubscription() {
+            const name = document.getElementById('subNameInput').value;
+            const desc = document.getElementById('subDescInput').value; 
+            const price = document.getElementById('subPriceInput').value;
+            const cycle = document.getElementById('subCycleInput').value;
+            const clientId = document.getElementById('subClientInput').value;
+            const date = document.getElementById('subDateInput').value;
+            
+            if(!name || !price) return;
+            
+            if(state.editingSubId) {
+                const index = state.subscriptions.findIndex(s => s.id === state.editingSubId);
+                if(index !== -1) {
+                    state.subscriptions[index] = { 
+                        ...state.subscriptions[index],
+                        name, desc, price, cycle, clientId, nextPayment: date, alerted: false 
+                    };
+                    showToast('Suscripción actualizada');
+                }
+            } else {
+                state.subscriptions.push({
+                    id: Date.now().toString(),
+                    name, desc, price, cycle, clientId, nextPayment: date, alerted: false
+                });
+                showToast('Suscripción guardada');
+            }
+            
+            saveData('subscriptions');
+            renderMain();
+            closeModal('subscriptionModal');
+        }
+
+        // Priority Edit Logic
+        function openPriorityConfigModal() {
+            state.editingPrioId = null; // New mode
+            openModal('priorityModal');
+            document.getElementById('priorityModalTitle').innerText = 'Nueva Prioridad';
+            document.getElementById('prioName').value = '';
+            state.tempPrioColor = 'gray'; 
+            state.tempPrioIcon = 'flag';
+            renderPrioColorPicker();
+            renderPrioIconPicker();
+        }
+
+        function openEditPriorityModal(id) {
+            state.editingPrioId = id;
+            const prio = state.priorities[id];
+            if(!prio) return;
+            state.tempPrioColor = prio.color; 
+            state.tempPrioIcon = prio.icon;
+            
+            openModal('priorityModal');
+            document.getElementById('priorityModalTitle').innerText = 'Editar Prioridad';
+            document.getElementById('prioName').value = prio.label;
+            
+            renderPrioColorPicker();
+            renderPrioIconPicker();
+        }
+
+        function renderPrioColorPicker() {
+            const container = document.getElementById('prioColorPicker');
+            container.innerHTML = colorPalette.map(c => `
+                <div onclick="selectProjectColor('${c.bg}')" 
+                     class="color-option ${c.bg} ${state.tempProjectColor === c.name ? 'selected ring-2 ring-offset-2 ring-gray-400' : ''}"
+                     title="${c.name}">
+                </div>
+            `).join('');
+        }
+
+        function renderPrioIconPicker() {
+            const container = document.getElementById('prioIconPicker');
+            container.innerHTML = iconPalette.map(icon => `
+                <div onclick="state.tempPrioIcon = '${icon}'; renderPrioIconPicker()" 
+                     class="w-8 h-8 flex items-center justify-center rounded border cursor-pointer hover:bg-gray-100 ${state.tempPrioIcon === icon ? 'bg-gray-200 border-gray-400' : 'border-transparent'}">
+                    <i data-lucide="${icon}" class="w-4 h-4 text-gray-700"></i>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function savePriority() {
+            const name = document.getElementById('prioName').value;
+            if(!name) return;
+
+            if(state.editingPrioId) {
+                // Edit Existing
+                state.priorities[state.editingPrioId] = {
+                    label: name,
+                    color: state.tempPrioColor,
+                    icon: state.tempPrioIcon
+                };
+            } else {
+                // Create New
+                const newId = Date.now();
+                state.priorities[newId] = {
+                    label: name,
+                    color: state.tempPrioColor,
+                    icon: state.tempPrioIcon
+                };
+            }
+            
+            saveData('priorities');
+            closeModal('priorityModal');
+        }
+
+        function deletePriority() {
+            if(!state.editingPrioId) return;
+            if(Object.keys(state.priorities).length <= 1) {
+                showToast("Debe haber al menos una prioridad.");
+                return;
+            }
+            
+            showConfirm('¿Eliminar esta prioridad?', (confirmed) => {
+                if(confirmed) {
+                    delete state.priorities[state.editingPrioId];
+                    saveData('priorities');
+                    closeModal('priorityModal');
+                    showToast('Prioridad eliminada');
+                }
+            });
+        }
+
+        function openEditModal(taskId) {
+            const task = state.tasks.find(t => t.id === taskId);
+            if (!task) return;
+            state.editingTaskId = taskId;
+            openModal('taskModal');
+            document.getElementById('taskModalTitle').innerText = 'Editar Tarea';
+            document.getElementById('newTaskInput').value = task.content;
+            document.getElementById('newTaskDesc').value = task.description || '';
+            document.getElementById('newTaskDate').value = task.date || '';
+            document.getElementById('newTaskPriority').value = task.priority;
+            document.getElementById('newTaskProject').value = task.projectId;
+            if(document.getElementById('newTaskAssignee')) {
+                document.getElementById('newTaskAssignee').value = task.assignedTo || "";
+            }
+            document.getElementById('taskModalBtn').innerHTML = 'Guardar Cambios <i data-lucide="check" class="w-4 h-4"></i>';
+        }
+
+        function openAddTaskModal(dateStr = null, initialText = '') {
+            state.editingTaskId = null;
+            openModal('taskModal');
+            document.getElementById('taskModalTitle').innerText = 'Nueva Tarea';
+            document.getElementById('taskModalBtn').innerHTML = 'Añadir Tarea <i data-lucide="arrow-right" class="w-4 h-4"></i>';
+            const dateInput = document.getElementById('newTaskDate');
+            const textInput = document.getElementById('newTaskInput');
+            const projectSelect = document.getElementById('newTaskProject');
+
+            if (dateStr) dateInput.value = `${dateStr}T09:00`; else dateInput.value = '';
+            if (initialText) textInput.value = initialText;
+            
+            // LOGIC FIX: Pre-select project based on current view
+            if (projectSelect) {
+                // Check if current view is a project
+                const currentProject = state.projects.find(p => p.id === state.view);
+                if (currentProject) {
+                    projectSelect.value = currentProject.id;
+                } else {
+                    projectSelect.value = 'inbox';
+                }
+            }
+
+            setTimeout(() => textInput.focus(), 100);
+        }
+
+        function saveTask() { 
+            const content = document.getElementById('newTaskInput').value; if(!content) return;
+            // Fallback for priority
+            const prioInput = document.getElementById('newTaskPriority');
+            const priority = prioInput ? (parseInt(prioInput.value) || 4) : 4;
+            const assignedTo = document.getElementById('newTaskAssignee') ? document.getElementById('newTaskAssignee').value : null;
+
+            // Get date from datetime-local
+            let dateVal = document.getElementById('newTaskDate').value;
+            // If date is empty but we are in 'today' view, default to today's date
+            if(!dateVal && state.view === 'today') dateVal = new Date().toISOString().split('T')[0];
+
+            if (state.editingTaskId) {
+                // Update existing
+                const taskIndex = state.tasks.findIndex(t => t.id === state.editingTaskId);
+                if (taskIndex !== -1) {
+                    state.tasks[taskIndex] = { 
+                        ...state.tasks[taskIndex], 
+                        content, 
+                        description: document.getElementById('newTaskDesc').value, 
+                        date: dateVal, 
+                        priority, 
+                        assignedTo,
+                        projectId: document.getElementById('newTaskProject').value || 'inbox' 
+                    };
+                    showToast('Tarea actualizada ✨');
+                }
+            } else {
+                // Create new
+                state.tasks.push({ 
+                    id: Date.now(), 
+                    content, 
+                    description: document.getElementById('newTaskDesc').value, 
+                    date: dateVal, 
+                    priority: priority, 
+                    assignedTo,
+                    projectId: document.getElementById('newTaskProject').value || 'inbox', 
+                    completed: false 
+                });
+                showToast('Tarea creada ✨');
+            }
+            
+            saveData('tasks'); 
+            closeModal('taskModal');
+        }
+
+        // Project Color Picker Logic
+        function renderProjectColorPicker() {
+            const container = document.getElementById('projectColorPicker');
+            container.innerHTML = colorPalette.map(c => `
+                <div onclick="selectProjectColor('${c.bg}')" 
+                     class="color-option ${c.bg} ${state.tempProjectColor === c.bg ? 'selected ring-2 ring-offset-2 ring-gray-400' : ''}" 
+                     title="${c.name}">
+                </div>
+            `).join('');
         }
         
-        // ... (Task & Project Logic remains but condensed for space, ensuring safety) ...
-        function saveTask() { const c = document.getElementById('newTaskInput').value; if(!c) return; const t = { id: state.editingTaskId||Date.now(), content: c, description: document.getElementById('newTaskDesc').value, date: document.getElementById('newTaskDate').value, priority: document.getElementById('newTaskPriority').value, projectId: document.getElementById('newTaskProject').value, assignedTo: document.getElementById('newTaskAssignee').value, completed: false }; if(state.editingTaskId) { const i=state.tasks.findIndex(x=>x.id===state.editingTaskId); state.tasks[i]=t; } else state.tasks.push(t); saveData('tasks'); closeModal('taskModal'); renderMain(); }
-        function deleteTask(id) { if(confirm("¿Borrar?")) { state.tasks=state.tasks.filter(t=>t.id!==id); saveData('tasks'); renderMain(); } }
-        function toggleTask(id) { const t=state.tasks.find(x=>x.id===id); if(t){t.completed=!t.completed; saveData('tasks'); renderMain();} }
-        function openEditModal(id) { const t=state.tasks.find(x=>x.id===id); if(t){ state.editingTaskId=id; openModal('taskModal'); document.getElementById('newTaskInput').value=t.content; document.getElementById('newTaskDesc').value=t.description; } }
-        function openAddTaskModal() { state.editingTaskId=null; openModal('taskModal'); }
-        function logout() { localStorage.removeItem('cerebrito_email'); location.reload(); }
-        function backToEmail() { document.getElementById('loginStep1').classList.remove('hidden'); document.getElementById('loginStep2').classList.add('hidden'); }
+        function addStudyTask(i) { if(!i.value.trim()) return; state.tasks.push({id: Date.now(), content: i.value, projectId: 'studies', completed: false, date: new Date().toISOString().split('T')[0]}); i.value=''; saveData('tasks'); showToast('Tarea estudio añadida'); renderMain(); }
         
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
-             const email = localStorage.getItem('cerebrito_email');
-             if(email) {
-                 document.getElementById('loginScreen').classList.add('hidden');
-                 document.getElementById('appContainer').classList.remove('hidden');
-                 loadData();
-             }
-        });
+        function addNotePrompt() { 
+            showInputPrompt("Título de la nota", (title) => {
+                if(!title) return;
+                showInputPrompt("Contenido", (content) => {
+                    if(!content) return;
+                    state.notes.push({id: Date.now(), title: title, content: content, date: new Date()}); 
+                    saveData('notes');
+                    renderMain(); // Actualizamos la vista inmediatamente
+                    showToast('Nota creada');
+                });
+            });
+        }
+
+        function deleteNote(id) { 
+            showConfirm('¿Borrar nota?', (confirmed) => {
+                if(confirmed) {
+                    state.notes = state.notes.filter(n => n.id !== id); 
+                    saveData('notes');
+                    renderMain(); // Actualizamos la vista inmediatamente
+                    showToast('Nota eliminada');
+                }
+            });
+        }
+
+        function switchTimerMode(mode) { state.timer.isActive = false; state.timer.mode = mode; state.timer.time = state.timerSettings[mode] * 60; renderMain(); }
+        function toggleTimer() { state.timer.isActive = !state.timer.isActive; updateTimerDisplay(); renderMain(); }
+        function resetTimer() { state.timer.isActive = false; state.timer.time = state.timerSettings[state.timer.mode] * 60; document.getElementById('timer-widget-container')?.classList.remove('timer-finished'); renderMain(); }
+        function updateTimerDisplay() { const el = document.getElementById('timer-display'); if(el) { const m = Math.floor(state.timer.time/60).toString().padStart(2,'0'); const s = (state.timer.time%60).toString().padStart(2,'0'); el.innerText = `${m}:${s}`; } }
+        
+        function changeMonth(d) { state.calendarDate.setMonth(state.calendarDate.getMonth() + d); renderMain(); }
+        function resetMonth() { state.calendarDate = new Date(); renderMain(); }
+        function addQuickTask(val) { if(!val.trim()) return; openAddTaskModal(null, val); }
+        function toggleTask(id) { const t = state.tasks.find(t => t.id === id); if(t) { t.completed = !t.completed; saveData('tasks'); if(t.completed) showToast('¡Tarea completada! 💪'); } }
+        
+        function deleteTask(id) { 
+            showConfirm('¿Eliminar esta tarea?', (confirmed) => {
+                if(confirmed) {
+                    state.tasks = state.tasks.filter(t => t.id !== id); 
+                    saveData('tasks'); 
+                    showToast('Tarea eliminada'); 
+                }
+            });
+        }
+        
+        function deleteProject(id, e) {
+            e.stopPropagation();
+            showConfirm('¿Eliminar proyecto y todas sus tareas?', (confirmed) => {
+                if(confirmed) {
+                    state.projects = state.projects.filter(p => p.id !== id);
+                    state.tasks = state.tasks.filter(t => t.projectId !== id);
+                    if(state.view === id) setView('inbox');
+                    saveData('projects');
+                    saveData('tasks');
+                    showToast('Proyecto eliminado');
+                }
+            });
+        }
+
+        function deleteClient(id) {
+            showConfirm('¿Borrar cliente? Se desvincularán proyectos y suscripciones.', (confirmed) => {
+                if(confirmed) {
+                    state.clients = state.clients.filter(c => c.id !== id);
+                    state.projects = state.projects.map(p => p.clientId === id ? {...p, clientId: ''} : p);
+                    state.subscriptions = state.subscriptions.filter(s => s.clientId !== id); 
+                    
+                    saveData('clients');
+                    saveData('projects'); 
+                    saveData('subscriptions');
+                    renderMain();
+                    showToast('Cliente eliminado');
+                }
+            });
+        }
+
+        function deleteSubscription(id) {
+            showConfirm('¿Cancelar suscripción?', (confirmed) => {
+                if(confirmed) {
+                    state.subscriptions = state.subscriptions.filter(s => s.id !== id);
+                    saveData('subscriptions');
+                    renderMain();
+                    showToast('Suscripción eliminada');
+                }
+            });
+        }
+        
+        function updateTempSetting(k, v) { state.tempSettings[k] = parseInt(v); const l = document.getElementById(`setting-val-${k}`); if(l) l.innerText = `${v} min`; }
+        function saveTimerSettings() { state.timerSettings = { ...state.tempSettings }; state.isTimerSettingsOpen = false; if (!state.timer.isActive) state.timer.time = state.timerSettings[state.timer.mode] * 60; saveData('timer'); showToast('Configuración guardada 👍'); }
+        function toggleTimerSettings() { state.isTimerSettingsOpen = !state.isTimerSettingsOpen; state.tempSettings = { ...state.timerSettings }; renderMain(); }
+
+        // --- HARD RESET FUNCTION ---
+        function hardReset() {
+            if(confirm("Esto borrará todas las tareas y notas locales. Esta acción no se puede deshacer. ¿Seguro?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+        
+        // --- GENERIC MODAL LOGIC ---
+        function showConfirm(text, callback) {
+            document.getElementById('confirmModalText').innerText = text;
+            state.pendingCallback = callback;
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+        function closeConfirmModal(result) {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if(state.pendingCallback) state.pendingCallback(result);
+            state.pendingCallback = null;
+        }
+
+        function showInputPrompt(title, callback) {
+            document.getElementById('inputModalTitle').innerText = title;
+            document.getElementById('genericInput').value = '';
+            state.pendingCallback = callback;
+            document.getElementById('inputModal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('genericInput').focus(), 50);
+        }
+        
+        function closeInputModal(isOk) {
+            document.getElementById('inputModal').classList.add('hidden');
+            const val = document.getElementById('genericInput').value;
+            const callbackToRun = state.pendingCallback;
+            state.pendingCallback = null;
+            if(callbackToRun) {
+                setTimeout(() => {
+                    callbackToRun(isOk ? val : null);
+                }, 100);
+            }
+        }
+
     </script>
 </body>
 </html>
