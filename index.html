@@ -102,6 +102,12 @@
         .text-brand-muted { color: var(--color-text-muted); }
         .bg-brand-item { background-color: var(--color-item-bg); }
         .hover\:bg-brand-item-hover:hover { background-color: var(--color-item-hover); }
+        
+        /* Notif Badge */
+        .notif-badge { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; background-color: #ef4444; border-radius: 50%; border: 2px solid var(--color-header); }
+        
+        /* Login Overlay */
+        #loginOverlay { backdrop-filter: blur(10px); }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden font-sans text-brand-text bg-brand-bg flex">
@@ -115,41 +121,110 @@
     <!-- Mobile Overlay -->
     <div id="mobile-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-20 hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
 
-    <!-- Sidebar -->
+    <!-- LOGIN SCREEN (NEW) -->
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/50 hidden">
+        <div class="bg-white rounded-3xl p-10 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 border border-white/40">
+            <div class="text-center mb-8">
+                <div class="text-5xl mb-2">🧠</div>
+                <h1 class="text-3xl font-black text-gray-800 tracking-tight">Cerebrito</h1>
+                <p class="text-gray-500 font-medium">Gestor de Tareas Inteligente</p>
+            </div>
+            
+            <div id="loginForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
+                        <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-transparent transition-all">
+                            <i data-lucide="mail" class="w-5 h-5 text-gray-400 mr-3"></i>
+                            <input type="email" id="loginEmail" class="bg-transparent border-none outline-none w-full text-gray-700 font-medium text-sm" placeholder="hola@ejemplo.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Contraseña</label>
+                        <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus-within:ring-2 focus-within:ring-orange-500 focus-within:border-transparent transition-all">
+                            <i data-lucide="lock" class="w-5 h-5 text-gray-400 mr-3"></i>
+                            <input type="password" id="loginPass" class="bg-transparent border-none outline-none w-full text-gray-700 font-medium text-sm" placeholder="••••••••">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="handleLogin()" class="w-full mt-8 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-500/30 transition-all transform active:scale-95 text-sm flex items-center justify-center gap-2">
+                    Iniciar Sesión <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+                <div class="mt-6 text-center">
+                    <p class="text-xs text-gray-400 font-medium">¿No tienes cuenta?</p>
+                    <button onclick="toggleLoginMode()" class="text-orange-600 font-bold text-sm hover:underline mt-1">Crear cuenta gratis</button>
+                </div>
+            </div>
+
+            <div id="registerForm" class="hidden">
+                 <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Correo Electrónico</label>
+                        <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                            <i data-lucide="mail" class="w-5 h-5 text-gray-400 mr-3"></i>
+                            <input type="email" id="regEmail" class="bg-transparent border-none outline-none w-full text-gray-700 font-medium text-sm" placeholder="tu@email.com">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5 ml-1">Contraseña</label>
+                        <div class="flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+                            <i data-lucide="lock" class="w-5 h-5 text-gray-400 mr-3"></i>
+                            <input type="password" id="regPass" class="bg-transparent border-none outline-none w-full text-gray-700 font-medium text-sm" placeholder="Elige una contraseña">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="handleRegister()" class="w-full mt-8 bg-gray-800 hover:bg-gray-900 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all transform active:scale-95 text-sm">
+                    Registrarse
+                </button>
+                <div class="mt-6 text-center">
+                    <button onclick="toggleLoginMode()" class="text-gray-500 font-bold text-sm hover:text-gray-700">← Volver al inicio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar (Diseño Mejorado y Scroll Unificado) -->
     <aside id="sidebar" class="w-72 h-full flex-shrink-0 border-r border-brand-border flex flex-col pt-6 bg-brand-sidebar z-30 shadow-xl fixed lg:relative transition-transform duration-300 sidebar-mobile-closed lg:transform-none lg:translate-x-0">
-        <div class="px-6 mb-6 lg:hidden flex justify-between items-center">
+        <!-- Logo Mobile (Fijo arriba) -->
+        <div class="px-6 mb-6 lg:hidden flex justify-between items-center shrink-0">
              <span class="font-extrabold text-2xl tracking-tight text-brand-primary">Cerebrito</span>
              <button onclick="toggleSidebar()" class="p-2 text-brand-muted hover:bg-black/5 rounded-lg"><i data-lucide="x" class="w-6 h-6"></i></button>
         </div>
 
-        <div class="px-5 space-y-1.5" id="sidebar-nav">
-            <!-- Se llena con JS -->
-        </div>
-        
-        <div class="mt-8 px-5">
-            <div class="flex items-center justify-between text-brand-muted mb-3 px-2 group">
-                <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Prioridades</span>
-                <button onclick="openPriorityConfigModal()" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nueva Prioridad">
-                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        <!-- Contenedor Unificado con Scroll -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar pb-10">
+            <!-- Navegación -->
+            <div class="px-5 space-y-1.5" id="sidebar-nav">
+                <!-- Se llena con JS -->
+            </div>
+            
+            <!-- Prioridades -->
+            <div class="mt-8 px-5">
+                <div class="flex items-center justify-between text-brand-muted mb-3 px-2 group">
+                    <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Prioridades</span>
+                    <button onclick="openPriorityConfigModal()" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nueva Prioridad">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+                <div class="space-y-1" id="sidebar-filters">
+                    <!-- Se llena con JS -->
+                </div>
+            </div>
+
+            <!-- Proyectos (Ahora parte del scroll principal) -->
+            <div class="mt-8 px-5">
+                <div class="flex items-center justify-between text-brand-muted hover:text-brand-text mb-3 px-2 group cursor-pointer transition-colors">
+                    <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Proyectos</span>
+                    <button onclick="openModal('projectModal')" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nuevo Proyecto"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                </div>
+                <div class="space-y-1" id="sidebar-projects">
+                    <!-- Se llena con JS -->
+                </div>
+                <button onclick="openModal('projectModal')" class="flex items-center gap-3 px-3 py-2.5 text-sm text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 w-full rounded-xl transition-colors mt-4 group font-medium">
+                    <div class="w-6 h-6 rounded-full border border-dashed border-brand-muted/50 flex items-center justify-center group-hover:border-brand-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i></div>
+                    <span>Añadir proyecto</span>
                 </button>
             </div>
-            <div class="space-y-1" id="sidebar-filters">
-                <!-- Se llena con JS -->
-            </div>
-        </div>
-
-        <div class="mt-8 px-5 flex-1 overflow-y-auto custom-scrollbar">
-            <div class="flex items-center justify-between text-brand-muted hover:text-brand-text mb-3 px-2 group cursor-pointer transition-colors">
-                <span class="font-bold text-[11px] uppercase tracking-widest opacity-80">Proyectos</span>
-                <button onclick="openModal('projectModal')" class="hover:bg-black/5 p-1 rounded-md transition-colors" title="Nuevo Proyecto"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-            </div>
-            <div class="space-y-1" id="sidebar-projects">
-                <!-- Se llena con JS -->
-            </div>
-            <button onclick="openModal('projectModal')" class="flex items-center gap-3 px-3 py-2.5 text-sm text-brand-muted hover:text-brand-primary hover:bg-brand-primary/10 w-full rounded-xl transition-colors mt-4 group font-medium">
-                <div class="w-6 h-6 rounded-full border border-dashed border-brand-muted/50 flex items-center justify-center group-hover:border-brand-primary"><i data-lucide="plus" class="w-3.5 h-3.5"></i></div>
-                <span>Añadir proyecto</span>
-            </button>
         </div>
     </aside>
 
@@ -175,6 +250,29 @@
             </div>
 
             <div class="ml-auto flex items-center gap-4 relative">
+                <!-- NEW: Global Calendar Button -->
+                <button onclick="openGlobalCalendar()" class="p-2.5 hover:bg-white/10 rounded-xl transition-colors hidden sm:block relative" title="Calendario Global">
+                    <i data-lucide="calendar-days" class="w-6 h-6"></i>
+                </button>
+
+                <!-- NEW: Notifications Button -->
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="p-2.5 hover:bg-white/10 rounded-xl transition-colors relative" title="Notificaciones">
+                        <i data-lucide="bell" class="w-6 h-6"></i>
+                        <span id="notifBadge" class="hidden absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-brand-header"></span>
+                    </button>
+                    <!-- Notifications Dropdown -->
+                    <div id="notifPanel" class="hidden absolute right-0 top-14 w-80 bg-brand-menu rounded-2xl shadow-2xl border border-brand-menu-border z-50 overflow-hidden animate-in fade-in origin-top-right flex flex-col max-h-96">
+                        <div class="p-4 border-b border-brand-menu-border bg-black/5 flex justify-between items-center shrink-0">
+                            <h4 class="font-bold text-brand-text text-sm">Notificaciones</h4>
+                            <button onclick="clearNotifications()" class="text-[10px] text-brand-muted hover:text-brand-primary font-bold uppercase tracking-wide">Limpiar</button>
+                        </div>
+                        <div id="notifList" class="flex-1 overflow-y-auto custom-scrollbar p-1">
+                            <!-- JS fills this -->
+                        </div>
+                    </div>
+                </div>
+
                 <button onclick="openAddTaskModal()" class="p-2.5 hover:bg-white/10 rounded-xl transition-colors hidden sm:block" title="Añadir tarea rápida">
                     <i data-lucide="plus" class="w-6 h-6"></i>
                 </button>
@@ -196,11 +294,15 @@
                             <!-- JS Fills this -->
                         </div>
                         <div class="p-2 border-t border-brand-menu-border mt-1 space-y-1">
+                            <!-- New Config Button -->
+                            <button onclick="openConfigModal()" class="w-full text-left px-3 py-2 text-sm font-medium text-brand-muted hover:bg-brand-item-hover rounded-lg flex items-center gap-2">
+                                <i data-lucide="settings" class="w-4 h-4"></i> Mi Configuración
+                            </button>
                             <button onclick="document.getElementById('avatarUploadInput').click()" class="w-full text-left px-3 py-2 text-sm font-medium text-brand-muted hover:bg-brand-item-hover rounded-lg flex items-center gap-2">
                                 <i data-lucide="image" class="w-4 h-4"></i> Cambiar Avatar
                             </button>
-                            <button onclick="hardReset()" class="w-full text-left px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg flex items-center gap-2 transition-colors">
-                                <i data-lucide="trash" class="w-4 h-4"></i> Restablecer Datos
+                            <button onclick="logout()" class="w-full text-left px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg flex items-center gap-2 transition-colors">
+                                <i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión
                             </button>
                         </div>
                     </div>
@@ -241,6 +343,41 @@
 
     </main>
 
+    <!-- Global Calendar Modal (NEW) -->
+    <div id="globalCalendarModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col m-4 animate-in fade-in zoom-in-95 border border-white/50 overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
+                <div>
+                    <h3 class="text-2xl font-black text-gray-800 tracking-tight flex items-center gap-3">
+                        <i data-lucide="calendar-days" class="w-6 h-6 text-brand-primary"></i> Calendario Global
+                    </h3>
+                    <p class="text-sm text-gray-500 mt-1">Todas tus fechas importantes en un solo lugar</p>
+                </div>
+                <div class="flex items-center gap-6">
+                    <!-- Filters -->
+                    <div class="flex gap-4 items-center bg-gray-50 px-4 py-2 rounded-xl border border-gray-100">
+                        <span class="text-xs font-bold text-gray-400 uppercase">Mostrar:</span>
+                        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="calFilterTasks" checked onchange="renderGlobalCalendar()" class="accent-blue-500 w-4 h-4 rounded">
+                            <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-blue-500"></div>Tareas</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer select-none">
+                            <input type="checkbox" id="calFilterSubs" checked onchange="renderGlobalCalendar()" class="accent-purple-500 w-4 h-4 rounded">
+                            <span class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-purple-500"></div>Suscripciones</span>
+                        </label>
+                    </div>
+                    <button onclick="closeModal('globalCalendarModal')" class="bg-gray-100 hover:bg-gray-200 text-gray-600 p-2.5 rounded-full transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            
+            <!-- Calendar Container -->
+            <div id="globalCalendarContainer" class="flex-1 bg-gray-50 overflow-hidden relative">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+    </div>
+
     <!-- Task Modal (Create/Edit) -->
     <div id="taskModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity">
         <div class="bg-white rounded-3xl p-8 shadow-2xl w-full max-w-xl mx-4 transform transition-all scale-100 animate-in fade-in zoom-in-95 border border-white/50">
@@ -269,6 +406,8 @@
                     <select id="newTaskProject" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white shadow-sm cursor-pointer font-medium hover:bg-gray-50">
                         <!-- Filled by JS -->
                     </select>
+                    <!-- DURATION INPUT (RESTORED) -->
+                    <input type="number" id="newTaskDuration" placeholder="Min" min="0" class="border border-gray-200 rounded-xl px-3 py-2.5 text-xs text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white shadow-sm cursor-pointer font-medium hover:bg-gray-50 w-20 flex-shrink-0" title="Tiempo estimado en minutos">
                 </div>
                 <div class="flex gap-3 pt-4 border-t border-gray-100">
                     <button onclick="closeModal('taskModal')" class="flex-1 px-5 py-3 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl transition-colors">Cancelar</button>
@@ -403,6 +542,15 @@
                 </select>
             </div>
 
+            <!-- ADDED: Status Selection -->
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Estado</label>
+                <select id="subStatusInput" class="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm text-gray-600 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary bg-white">
+                    <option value="active">Activa</option>
+                    <option value="inactive">Inactiva (Pausada)</option>
+                </select>
+            </div>
+
             <div class="mb-6">
                 <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Próxima Renovación (Fecha y Hora)</label>
                 <input type="datetime-local" id="subDateInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 focus:bg-white transition-all font-medium">
@@ -460,6 +608,24 @@
         </div>
     </div>
 
+    <!-- Config Modal (User Email) -->
+    <div id="configModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-3xl p-6 w-96 shadow-2xl animate-in fade-in zoom-in-95 border border-white/50">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="font-bold text-lg text-gray-800">Mi Configuración</h3>
+                <button onclick="closeModal('configModal')" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-brand-muted mb-4">Introduce tu correo para recibir notificaciones de nuevas tareas.</p>
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Correo Electrónico</label>
+            <input type="email" id="userEmailInput" class="w-full border border-gray-200 rounded-xl px-4 py-3 mb-6 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/20 text-sm bg-gray-50 font-medium" placeholder="tu@email.com">
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('configModal')" class="px-4 py-2 text-sm font-bold text-gray-500 hover:bg-gray-100 rounded-xl">Cancelar</button>
+                <button onclick="saveConfig()" class="px-6 py-2 text-sm font-bold text-white bg-brand-primary rounded-xl hover:bg-brand-primary-hover shadow-md">Guardar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Input Modal -->
     <div id="inputModal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
         <div class="bg-white rounded-3xl p-6 w-96 shadow-2xl animate-in fade-in zoom-in-95">
@@ -486,15 +652,17 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        // --- HELPER FUNCTIONS (DEFINED FIRST TO AVOID REFERENCE ERRORS) ---
-        function showToast(msg) { 
+        // --- HELPER FUNCTIONS ---
+        function showToast(msg, type = 'info') { 
             const c = document.getElementById('toast-container'); 
             const t = document.createElement('div'); 
             t.className = 'toast'; 
-            t.innerHTML = `<span class="font-bold text-brand-primary">Info</span><span>${msg}</span>`; 
+            t.innerHTML = `<span class="font-bold text-brand-primary">${type === 'error' ? 'Error' : 'Info'}</span><span>${msg}</span>`; 
             c.appendChild(t); 
             setTimeout(()=>t.classList.add('show'),10); 
             setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300)},3000); 
+            
+            if (type !== 'error') addNotification(msg, type); // Only log info
         }
 
         function formatDate(d) {
@@ -523,11 +691,12 @@
             if(id === 'today') return activeTasks.filter(t => t.date && t.date.startsWith(today)).length;
             if(id === 'upcoming') return activeTasks.filter(t => t.date && t.date > today && !t.date.startsWith(today)).length;
             if(id === 'studies') return activeTasks.filter(t => t.projectId === 'studies').length;
+            if(id === 'completed') return state.tasks.filter(t => t.completed).length; 
             return ''; 
         }
 
         // --- CONFIG & STATE ---
-        const USE_DB = false; 
+        const USE_DB = true; // ACTIVATED DATABASE MODE
 
         // Themes
         const themesConfig = {
@@ -556,7 +725,7 @@
         // State
         let state = {
             tasks: [], projects: [], notes: [],
-            clients: [], subscriptions: [], collaborators: [],
+            clients: [], subscriptions: [], collaborators: [], notifications: [], 
             priorities: {
                 1: { label: 'Urgente', color: 'red', icon: 'flag' },
                 2: { label: 'Importante', color: 'orange', icon: 'flag' },
@@ -569,8 +738,153 @@
             userAvatar: null, editingTaskId: null, editingProjectId: null, editingPrioId: null,
             editingClientId: null, editingSubId: null, editingCollabId: null,
             tempProjectColor: 'bg-gray-500', tempPrioColor: 'red', tempPrioIcon: 'flag',
-            pendingCallback: null // for modals
+            pendingCallback: null,
+            userEmail: '', // Auto-set on login
+            userId: null // Stores session ID
         };
+
+        // --- AUTH LOGIC ---
+        function checkSession() {
+            const token = localStorage.getItem('cerebrito_token');
+            const email = localStorage.getItem('cerebrito_email');
+            
+            if (token && email) {
+                state.userId = token;
+                state.userEmail = email;
+                loadData();
+            } else {
+                document.getElementById('loginOverlay').classList.remove('hidden');
+            }
+        }
+
+        function toggleLoginMode() {
+            document.getElementById('loginForm').classList.toggle('hidden');
+            document.getElementById('registerForm').classList.toggle('hidden');
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPass').value;
+            
+            if (!email || !pass) { showToast('Rellena todos los campos', 'error'); return; }
+
+            try {
+                const res = await fetch('api.php?action=login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, password: pass })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    completeLogin(data.userId, email);
+                } else {
+                    showToast(data.error || 'Error al iniciar sesión', 'error');
+                }
+            } catch (e) { showToast('Error de conexión', 'error'); }
+        }
+
+        async function handleRegister() {
+            const email = document.getElementById('regEmail').value;
+            const pass = document.getElementById('regPass').value;
+
+            if (!email || !pass) { showToast('Rellena todos los campos', 'error'); return; }
+
+            try {
+                const res = await fetch('api.php?action=register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email, password: pass })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    completeLogin(data.userId, email);
+                    showToast('¡Cuenta creada! Bienvenido/a');
+                } else {
+                    showToast(data.error || 'Error al registrar', 'error');
+                }
+            } catch (e) { showToast('Error de conexión', 'error'); }
+        }
+
+        function completeLogin(id, email) {
+            state.userId = id;
+            state.userEmail = email;
+            localStorage.setItem('cerebrito_token', id);
+            localStorage.setItem('cerebrito_email', email);
+            
+            document.getElementById('loginOverlay').classList.add('hidden');
+            loadData();
+        }
+
+        function logout() {
+            localStorage.removeItem('cerebrito_token');
+            localStorage.removeItem('cerebrito_email');
+            location.reload();
+        }
+
+
+        // --- DATA LAYER (API) ---
+        async function loadData() {
+            if (USE_DB && state.userId) {
+                try {
+                    const res = await fetch(`api.php?action=get_all_data&userId=${state.userId}`);
+                    const data = await res.json();
+                    
+                    if (data.tasks) state.tasks = data.tasks;
+                    if (data.projects) state.projects = data.projects;
+                    if (data.notes) state.notes = data.notes;
+                    if (data.clients) state.clients = data.clients;
+                    if (data.subscriptions) state.subscriptions = data.subscriptions;
+                    if (data.collaborators) state.collaborators = data.collaborators;
+                    
+                    // JSON Settings
+                    if (data.priorities) state.priorities = data.priorities;
+                    if (data.theme) { state.theme = data.theme; applyTheme(state.theme); }
+                    if (data.timer) state.timerSettings = data.timer;
+                    if (data.notifications) state.notifications = data.notifications;
+
+                } catch (e) { console.error("API Load Error", e); }
+            } else {
+                // Fallback (or initial state for empty DB)
+                // We assume new users start fresh or DB returns empty arrays
+            }
+            
+            // UI Init
+            if(!state.timer.isActive) state.timer.time = state.timerSettings[state.timer.mode] * 60;
+            renderSidebar(); 
+            renderMain();
+            updateNotifBadge();
+        }
+
+        async function saveData(type) {
+            if (USE_DB && state.userId) {
+                let payload = [];
+                // Map state key to payload
+                if (type === 'tasks') payload = state.tasks;
+                else if (type === 'projects') payload = state.projects;
+                else if (type === 'notes') payload = state.notes;
+                else if (type === 'clients') payload = state.clients;
+                else if (type === 'subscriptions') payload = state.subscriptions;
+                else if (type === 'collaborators') payload = state.collaborators;
+                else if (type === 'priorities') payload = state.priorities;
+                else if (type === 'theme') payload = state.theme;
+                else if (type === 'timer') payload = state.timerSettings;
+                else if (type === 'notifications') payload = state.notifications;
+                else if (type === 'user_email') {} // handled by auth
+
+                try {
+                    await fetch(`api.php?action=save_${type}`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ userId: state.userId, data: payload })
+                    });
+                } catch(e) { console.error("API Save Error", e); }
+            }
+
+            if(type === 'projects' || type === 'tasks' || type === 'priorities') { renderSidebar(); }
+        }
+
 
         // --- USER MENU LOGIC ---
         function toggleUserMenu() {
@@ -591,10 +905,7 @@
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-            if(!localStorage.getItem('tm_theme')) applyTheme('cerebrito'); else applyTheme(state.theme);
-            renderMain();
-            renderUserMenuThemes();
+            checkSession(); // Replaces direct loadData
             
             // Timer Loop & Notifications
             setInterval(() => { 
@@ -617,107 +928,58 @@
             }, 1000);
         });
 
+        // UPDATED: Check for active subs and send emails
         function checkSubscriptionNotifications() {
             const now = new Date();
             state.subscriptions.forEach(s => {
+                // Only check if status is NOT inactive (active or undefined)
+                if (s.status === 'inactive') return;
+
                 if (s.nextPayment && !s.alerted) {
                     const payDate = new Date(s.nextPayment);
                     const diff = payDate - now;
+                    // Trigger alert if within the last minute (and not in future)
                     if (diff <= 0 && diff > -60000) { 
                         showToast(`¡Renovación pendiente: ${s.name}! 🔔`);
                         s.alerted = true; 
                         saveData('subscriptions');
+                        
+                        // NEW: Send Email Reminder
+                        if (state.userEmail) {
+                            sendSubscriptionEmail(s);
+                        }
                     }
                 }
             });
         }
+        
+        // ... REST OF THE FUNCTIONS (Unchanged logic, just ensure they use state) ...
 
         // Common Functions / Helpers
         function getFilteredTasks() {
             let tasks = state.tasks;
             if(state.searchQuery) return tasks.filter(t => t.content.toLowerCase().includes(state.searchQuery));
-            if (state.view === 'today') tasks = tasks.filter(t => t.date && t.date.startsWith(new Date().toISOString().split('T')[0]));
-            else if (state.view === 'upcoming') tasks = tasks.filter(t => t.date > new Date().toISOString().split('T')[0]);
-            else if (state.view === 'inbox') tasks = tasks.filter(t => !t.completed); 
+            
+            // Lógica de filtrado actualizada:
+            // 1. Si la vista es 'completed', mostrar solo las completadas.
+            if (state.view === 'completed') return tasks.filter(t => t.completed);
+            
+            // 2. Para CUALQUIER otra vista, filtramos primero las activas (no completadas).
+            // Esto asegura que desaparezcan de Hoy, Próximamente, Proyectos, etc.
+            tasks = tasks.filter(t => !t.completed);
+
+            if (state.view === 'today') return tasks.filter(t => t.date && t.date.startsWith(new Date().toISOString().split('T')[0]));
+            else if (state.view === 'upcoming') return tasks.filter(t => t.date > new Date().toISOString().split('T')[0]);
+            else if (state.view === 'inbox') return tasks; // Devuelve todas las activas (para que el board funcione bien) o filtra por projectId='inbox' si prefieres. Por defecto 'inbox' muestra todo lo pendiente.
             else if (state.view === 'studies') return [];
             else if (['subscriptions', 'clients', 'collaborators'].includes(state.view)) return [];
-            else if (state.view.startsWith('filter-p')) tasks = tasks.filter(t => t.priority == state.view.split('filter-p')[1] && !t.completed);
+            else if (state.view.startsWith('filter-p')) return tasks.filter(t => t.priority == state.view.split('filter-p')[1]);
             else if (state.view.startsWith('filter-collab-')) {
                  const cId = state.view.split('filter-collab-')[1];
-                 tasks = tasks.filter(t => t.assignedTo === cId && !t.completed);
+                 return tasks.filter(t => t.assignedTo === cId);
             }
-            else tasks = tasks.filter(t => t.projectId === state.view);
+            else return tasks.filter(t => t.projectId === state.view);
             return tasks;
-        }
-
-        // Data Layer
-        async function loadData() {
-            loadLocalData();
-            if(!state.timer.isActive) state.timer.time = state.timerSettings[state.timer.mode] * 60;
-            const savedAvatar = localStorage.getItem('tm_avatar'); if(savedAvatar) { state.userAvatar = savedAvatar; updateUserAvatarUI(); }
-            renderSidebar(); renderMain();
-        }
-
-        function loadLocalData() {
-            try {
-                const t = localStorage.getItem('tm_tasks'); state.tasks = t ? JSON.parse(t) : initSampleData().tasks;
-                const p = localStorage.getItem('tm_projects'); state.projects = p ? JSON.parse(p) : initSampleData().projects;
-                // ROBUST FIX for Priorities: Ensure it's an object
-                const pr = localStorage.getItem('tm_priorities'); 
-                if(pr) {
-                    const parsed = JSON.parse(pr);
-                    state.priorities = (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) ? parsed : initSampleData().priorities;
-                } else if (!state.priorities) {
-                    state.priorities = initSampleData().priorities;
-                }
-
-                const th = localStorage.getItem('tm_theme'); if (th && themesConfig[th]) state.theme = th;
-                const ts = localStorage.getItem('tm_timer_settings'); if(ts) state.timerSettings = JSON.parse(ts);
-                const c = localStorage.getItem('tm_clients'); state.clients = c ? JSON.parse(c) : [];
-                const s = localStorage.getItem('tm_subscriptions'); state.subscriptions = s ? JSON.parse(s) : [];
-                const col = localStorage.getItem('tm_collaborators'); state.collaborators = col ? JSON.parse(col) : [];
-                
-                const n = localStorage.getItem('tm_notes'); 
-                if(n) {
-                    const parsed = JSON.parse(n);
-                    state.notes = Array.isArray(parsed) ? parsed : [];
-                } else {
-                    state.notes = [];
-                }
-            } catch (e) {
-                console.error("Error loading data", e);
-                state.notes = [];
-                state.clients = [];
-                state.collaborators = [];
-            }
-        }
-
-        function initSampleData() {
-            const today = new Date().toISOString().split('T')[0];
-            return {
-                tasks: [{id: 1, content: "Bienvenido a Cerebrito", description: "Explora las vistas usando el menú", projectId: 'inbox', priority: 1, completed: false, date: today}],
-                projects: [{ id: 'personal', name: 'Personal', color: 'bg-green-500' }, { id: 'work', name: 'Trabajo', color: 'bg-blue-500' }],
-                priorities: {
-                    1: { label: 'Urgente', color: 'red', icon: 'flag' },
-                    2: { label: 'Importante', color: 'orange', icon: 'flag' },
-                    3: { label: 'Normal', color: 'blue', icon: 'flag' },
-                    4: { label: 'Baja', color: 'gray', icon: 'flag' }
-                }
-            };
-        }
-
-        async function saveData(type) {
-            if(type === 'tasks') localStorage.setItem('tm_tasks', JSON.stringify(state.tasks));
-            if(type === 'projects') localStorage.setItem('tm_projects', JSON.stringify(state.projects));
-            if(type === 'notes') localStorage.setItem('tm_notes', JSON.stringify(state.notes));
-            if(type === 'priorities') localStorage.setItem('tm_priorities', JSON.stringify(state.priorities));
-            if(type === 'theme') localStorage.setItem('tm_theme', state.theme);
-            if(type === 'timer') localStorage.setItem('tm_timer_settings', JSON.stringify(state.timerSettings));
-            if(type === 'clients') localStorage.setItem('tm_clients', JSON.stringify(state.clients));
-            if(type === 'subscriptions') localStorage.setItem('tm_subscriptions', JSON.stringify(state.subscriptions));
-            if(type === 'collaborators') localStorage.setItem('tm_collaborators', JSON.stringify(state.collaborators));
-            
-            if(type === 'projects' || type === 'tasks' || type === 'priorities') { renderSidebar(); }
         }
 
         // Logic & Render
@@ -781,7 +1043,8 @@
                 { id: 'inbox', label: 'Bandeja de entrada', icon: 'inbox' }, { id: 'today', label: 'Hoy', icon: 'calendar' },
                 { id: 'upcoming', label: 'Próximamente', icon: 'calendar-days' }, { id: 'studies', label: 'Estudios', icon: 'book-open' },
                 { id: 'subscriptions', label: 'Suscripciones', icon: 'credit-card' }, { id: 'clients', label: 'Clientes', icon: 'users' },
-                { id: 'collaborators', label: 'Colaboradores', icon: 'briefcase' }
+                { id: 'collaborators', label: 'Colaboradores', icon: 'briefcase' },
+                { id: 'completed', label: 'Completadas', icon: 'check-circle-2' } // Nueva opción
             ].map(i => `<div onclick="setView('${i.id}')" class="flex justify-between px-3 py-2.5 rounded-xl cursor-pointer mb-1 text-sm transition-all font-medium ${cls(i.id)}"><div class="flex gap-3 items-center"><i data-lucide="${i.icon}" class="w-4.5 h-4.5"></i><span>${i.label}</span></div><span class="text-xs opacity-70 font-bold bg-white/50 px-2 py-0.5 rounded-md text-brand-text">${getTaskCount(i.id)||''}</span></div>`).join('');
             
             filt.innerHTML = Object.keys(state.priorities).map(p => {
@@ -816,6 +1079,7 @@
             const container = document.getElementById('main-container'); const title = document.getElementById('view-title'); const controls = document.getElementById('view-controls');
             let txt = '';
             if(state.view === 'inbox') txt = 'Bandeja de Entrada'; else if(state.view === 'studies') txt = 'Zona de Estudio'; else if(state.view === 'subscriptions') txt = 'Suscripciones'; else if(state.view === 'clients') txt = 'Cartera de Clientes'; else if(state.view === 'collaborators') txt = 'Equipo de Trabajo'; else if(state.view === 'today') txt = 'Hoy'; else if(state.view === 'upcoming') txt = 'Próximamente'; 
+            else if(state.view === 'completed') txt = 'Tareas Completadas'; // Titulo para completadas
             else if(state.view.startsWith('filter-p')) {
                 const p = state.view.split('filter-p')[1];
                 txt = state.priorities[p] ? state.priorities[p].label : 'Prioridad';
@@ -927,6 +1191,7 @@
                 </div>`;
         }
 
+        // UPDATED: Render subscriptions with visual indicator for inactive ones
         function renderSubscriptions(container) {
             container.innerHTML = `
                 <div class="animate-in fade-in space-y-6">
@@ -952,10 +1217,16 @@
                                 ${state.subscriptions.map(s => {
                                     const client = state.clients.find(c => c.id === s.clientId);
                                     const clientName = client ? client.name : '<span class="text-brand-muted italic">Sin asignar</span>';
+                                    const isInactive = s.status === 'inactive';
+                                    const rowClass = isInactive ? 'opacity-50 grayscale bg-gray-50' : 'hover:bg-brand-item-hover';
+                                    
                                     return `
-                                    <tr class="hover:bg-brand-item-hover transition-colors group">
+                                    <tr class="${rowClass} transition-colors group">
                                         <td class="px-6 py-4 align-middle">
-                                            <div class="font-bold">${s.name}</div>
+                                            <div class="flex items-center gap-2">
+                                                ${isInactive ? '<span class="text-[10px] font-bold uppercase bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded">Pausada</span>' : ''}
+                                                <div class="font-bold">${s.name}</div>
+                                            </div>
                                             ${s.desc ? `<div class="text-xs text-brand-muted mt-0.5 max-w-xs truncate">${s.desc}</div>` : ''}
                                         </td>
                                         <td class="px-6 py-4 align-middle">${clientName}</td>
@@ -1068,6 +1339,7 @@
                                         ${assignee.name.split(' ')[0]}
                                     </span>
                                 ` : ''}
+                                ${task.duration ? `<span class="flex items-center gap-1.5 px-2 py-1 rounded-md bg-blue-50 text-blue-600 border border-blue-100"><i data-lucide="clock" class="w-3 h-3"></i> ${task.duration}m</span>` : ''}
                             </div>
                         </div>
                         <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1093,6 +1365,7 @@
                      <div class="flex justify-between items-center text-xs text-brand-muted mt-2">
                         <span>${t.date ? formatDate(t.date) : ''}</span>
                         <div class="flex items-center gap-2">
+                            ${t.duration ? `<div class="flex items-center gap-1 text-[10px] text-brand-muted bg-black/5 px-1.5 py-0.5 rounded"><i data-lucide="clock" class="w-3 h-3"></i> ${t.duration}m</div>` : ''}
                             ${assignee ? `<div class="w-5 h-5 rounded-full bg-brand-primary text-white flex items-center justify-center text-[9px] font-bold border border-white shadow-sm" title="${assignee.name}">${assignee.name[0]}</div>` : ''}
                             <i data-lucide="${pm.icon}" class="w-3.5 h-3.5 ${iconColor}"></i>
                         </div>
@@ -1112,7 +1385,28 @@
             // Safety check for notes
             const notesList = Array.isArray(state.notes) ? state.notes : [];
             
-            container.innerHTML = `<div class="flex flex-col gap-8 animate-in fade-in pb-10"><div id="timer-widget-container" class="bg-brand-item rounded-3xl shadow-lg border border-brand-border p-8 flex flex-col gap-8 relative overflow-visible bg-gradient-to-br from-brand-item to-brand-sidebar"><button onclick="toggleTimerSettings()" class="absolute top-6 right-6 p-2 text-brand-muted hover:text-brand-text hover:bg-brand-item rounded-full transition-colors z-20 shadow-sm border border-transparent hover:border-brand-border" title="Configurar Tiempos"><i data-lucide="settings" class="w-5 h-5"></i></button><div id="timerSettingsPanel" class="${state.isTimerSettingsOpen ? '' : 'hidden'} absolute top-16 right-6 bg-brand-item rounded-2xl shadow-2xl border border-brand-border p-5 w-72 z-30 animate-in fade-in zoom-in-95 origin-top-right"><h4 class="font-bold text-brand-text text-sm mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Ajustar Temporizador</h4><div class="space-y-4"><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Productivo</label><span class="text-xs font-bold text-brand-primary" id="setting-val-focus">${state.tempSettings.focus} min</span></div><input type="range" min="1" max="90" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" value="${state.tempSettings.focus}" oninput="updateTempSetting('focus', this.value)"></div><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Descanso</label><span class="text-xs font-bold text-blue-500" id="setting-val-break">${state.tempSettings.break} min</span></div><input type="range" min="1" max="30" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-blue-500" value="${state.tempSettings.break}" oninput="updateTempSetting('break', this.value)"></div><button onclick="saveTimerSettings()" class="w-full py-2.5 rounded-xl text-white text-xs font-bold bg-brand-primary hover:bg-brand-primary-hover shadow-md transition-colors mt-2">Guardar Configuración</button></div></div><div class="flex gap-4 justify-center md:justify-start"><button onclick="switchTimerMode('focus')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${focusBtnClass}"><i data-lucide="brain-circuit" class="w-5 h-5"></i> Estudio (${state.timerSettings.focus}m)</button><button onclick="switchTimerMode('break')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${breakBtnClass}"><i data-lucide="coffee" class="w-5 h-5"></i> Descanso (${state.timerSettings.break}m)</button></div><div class="flex flex-col md:flex-row items-center justify-between gap-8"><div class="flex items-center gap-8"><div><h2 class="text-8xl font-black text-brand-text tracking-tighter tabular-nums leading-none drop-shadow-sm" id="timer-display">${mins}:${secs}</h2><p class="text-sm font-bold text-brand-muted uppercase tracking-widest mt-2 ml-2">${state.timer.mode === 'focus' ? 'Tiempo de Enfoque' : 'Tiempo de Relax'}</p></div></div><div class="flex gap-4"><button onclick="toggleTimer()" class="w-24 h-24 rounded-3xl ${state.timer.mode === 'focus' ? 'bg-brand-primary hover:bg-brand-primary-hover' : 'bg-blue-500 hover:bg-blue-600'} text-white flex items-center justify-center transition-transform shadow-2xl hover:shadow-3xl active:scale-95 border-4 border-white"><i data-lucide="${state.timer.isActive ? 'pause' : 'play'}" class="w-10 h-10 fill-current ml-1"></i></button><button onclick="resetTimer()" class="w-24 h-24 rounded-3xl bg-brand-item text-brand-muted border-2 border-black/5 flex items-center justify-center hover:bg-brand-item-hover hover:text-brand-text shadow-lg hover:shadow-xl transition-all active:scale-95"><i data-lucide="rotate-ccw" class="w-8 h-8"></i></button></div></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full"><div class="bg-brand-item border border-brand-border rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-brand-border font-bold flex gap-3 items-center text-brand-text bg-black/5"><i data-lucide="graduation-cap" class="w-5 h-5 text-brand-primary"></i> Tareas de Estudio</div><div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/5" id="study-tasks-list">${state.tasks.filter(t => t.projectId === 'studies').map(t => `<div class="flex items-center gap-3 bg-brand-item p-4 rounded-2xl border border-brand-border shadow-sm hover:shadow-md transition-all"><button onclick="toggleTask(${t.id})" class="flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${t.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-200 hover:border-brand-primary'}"><i data-lucide="check" class="w-3.5 h-3.5"></i></button><span class="flex-1 text-sm font-medium ${t.completed?'line-through text-brand-muted':'text-brand-text'}">${t.content}</span><button onclick="deleteTask(${t.id})" class="text-brand-muted hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`).join('')}</div><div class="p-4 border-t border-brand-border bg-brand-item"><div class="flex items-center gap-3 bg-black/5 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand-primary focus-within:bg-brand-item focus-within:shadow-md transition-all"><i data-lucide="plus" class="w-5 h-5 text-brand-muted"></i><input type="text" placeholder="Añadir tarea..." class="flex-1 bg-transparent text-sm font-medium outline-none text-brand-text placeholder-brand-muted" onkeydown="if(event.key==='Enter') addStudyTask(this)"></div></div></div><div class="bg-amber-50/30 border border-amber-100 rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-amber-100/50 font-bold text-amber-900 flex gap-3 items-center bg-amber-50/50"><i data-lucide="book-open" class="w-5 h-5 text-amber-600"></i> Apuntes</div><div class="p-5 grid grid-cols-2 gap-4 overflow-y-auto custom-scrollbar"><div onclick="addNotePrompt()" class="border-2 border-dashed border-amber-200/60 rounded-2xl flex flex-col items-center justify-center text-amber-400 cursor-pointer hover:bg-amber-50 hover:border-amber-300 hover:text-amber-600 transition-all h-36 bg-white/60"><i data-lucide="plus" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Nueva Nota</span></div>${notesList.map(n => `<div class="bg-white p-4 rounded-2xl shadow-sm border border-amber-100/50 text-xs h-36 overflow-hidden relative group hover:shadow-lg transition-all hover:-translate-y-1"><h4 class="font-bold text-gray-800 mb-2 truncate text-sm border-b border-gray-50 pb-2">${n.title}</h4><p class="text-gray-500 leading-relaxed line-clamp-4">${n.content}</p><button onclick="deleteNote(${n.id})" class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`).join('')}</div></div></div></div>`;
+            // UPDATED: Filtrar también aquí las tareas completadas para que desaparezcan de la lista de estudios
+            const studyTasks = state.tasks.filter(t => t.projectId === 'studies' && !t.completed);
+
+            container.innerHTML = `<div class="flex flex-col gap-8 animate-in fade-in pb-10"><div id="timer-widget-container" class="bg-brand-item rounded-3xl shadow-lg border border-brand-border p-8 flex flex-col gap-8 relative overflow-visible bg-gradient-to-br from-brand-item to-brand-sidebar"><button onclick="toggleTimerSettings()" class="absolute top-6 right-6 p-2 text-brand-muted hover:text-brand-text hover:bg-brand-item rounded-full transition-colors z-20 shadow-sm border border-transparent hover:border-brand-border" title="Configurar Tiempos"><i data-lucide="settings" class="w-5 h-5"></i></button><div id="timerSettingsPanel" class="${state.isTimerSettingsOpen ? '' : 'hidden'} absolute top-16 right-6 bg-brand-item rounded-2xl shadow-2xl border border-brand-border p-5 w-72 z-30 animate-in fade-in zoom-in-95 origin-top-right"><h4 class="font-bold text-brand-text text-sm mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-4 h-4"></i> Ajustar Temporizador</h4><div class="space-y-4"><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Productivo</label><span class="text-xs font-bold text-brand-primary" id="setting-val-focus">${state.tempSettings.focus} min</span></div><input type="range" min="1" max="90" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-brand-primary" value="${state.tempSettings.focus}" oninput="updateTempSetting('focus', this.value)"></div><div><div class="flex justify-between mb-1"><label class="text-xs text-brand-muted font-bold uppercase">Descanso</label><span class="text-xs font-bold text-blue-500" id="setting-val-break">${state.tempSettings.break} min</span></div><input type="range" min="1" max="30" class="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-blue-500" value="${state.tempSettings.break}" oninput="updateTempSetting('break', this.value)"></div><button onclick="saveTimerSettings()" class="w-full py-2.5 rounded-xl text-white text-xs font-bold bg-brand-primary hover:bg-brand-primary-hover shadow-md transition-colors mt-2">Guardar Configuración</button></div></div><div class="flex gap-4 justify-center md:justify-start"><button onclick="switchTimerMode('focus')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${focusBtnClass}"><i data-lucide="brain-circuit" class="w-5 h-5"></i> Estudio (${state.timerSettings.focus}m)</button><button onclick="switchTimerMode('break')" class="px-6 py-3 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${breakBtnClass}"><i data-lucide="coffee" class="w-5 h-5"></i> Descanso (${state.timerSettings.break}m)</button></div><div class="flex flex-col md:flex-row items-center justify-between gap-8"><div class="flex items-center gap-8"><div><h2 class="text-8xl font-black text-brand-text tracking-tighter tabular-nums leading-none drop-shadow-sm" id="timer-display">${mins}:${secs}</h2><p class="text-sm font-bold text-brand-muted uppercase tracking-widest mt-2 ml-2">${state.timer.mode === 'focus' ? 'Tiempo de Enfoque' : 'Tiempo de Relax'}</p></div></div><div class="flex gap-4"><button onclick="toggleTimer()" class="w-24 h-24 rounded-3xl ${state.timer.mode === 'focus' ? 'bg-brand-primary hover:bg-brand-primary-hover' : 'bg-blue-500 hover:bg-blue-600'} text-white flex items-center justify-center transition-transform shadow-2xl hover:shadow-3xl active:scale-95 border-4 border-white"><i data-lucide="${state.timer.isActive ? 'pause' : 'play'}" class="w-10 h-10 fill-current ml-1"></i></button><button onclick="resetTimer()" class="w-24 h-24 rounded-3xl bg-brand-item text-brand-muted border-2 border-black/5 flex items-center justify-center hover:bg-brand-item-hover hover:text-brand-text shadow-lg hover:shadow-xl transition-all active:scale-95"><i data-lucide="rotate-ccw" class="w-8 h-8"></i></button></div></div></div><div class="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full"><div class="bg-brand-item border border-brand-border rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-brand-border font-bold flex gap-3 items-center text-brand-text bg-black/5"><i data-lucide="graduation-cap" class="w-5 h-5 text-brand-primary"></i> Tareas de Estudio</div><div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar bg-black/5" id="study-tasks-list">
+            ${studyTasks.map(t => {
+                const pm = getPrioStyle(t.priority);
+                return `<div class="group flex items-start gap-3 bg-brand-item p-3 rounded-2xl border border-brand-border shadow-sm hover:shadow-md transition-all cursor-pointer hover:bg-brand-item-hover" onclick="openEditModal(${t.id})">
+                    <button onclick="event.stopPropagation(); toggleTask(${t.id})" class="mt-0.5 flex-shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${t.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-200 hover:border-brand-primary'}"><i data-lucide="check" class="w-3.5 h-3.5"></i></button>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-medium text-brand-text leading-tight ${t.completed?'line-through text-brand-muted':'text-brand-text'}">${t.content}</div>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                             ${t.date ? `<span class="flex items-center gap-1 text-[10px] font-bold text-brand-muted bg-black/5 px-1.5 py-0.5 rounded border border-black/5"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(t.date)}</span>` : ''}
+                             <span class="flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded border ${pm.class}"><i data-lucide="${pm.icon}" class="w-3 h-3"></i> ${pm.label}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="event.stopPropagation(); openEditModal(${t.id})" class="text-brand-muted hover:text-brand-primary p-1.5 hover:bg-black/5 rounded-lg"><i data-lucide="pencil" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="event.stopPropagation(); deleteTask(${t.id})" class="text-brand-muted hover:text-red-500 p-1.5 hover:bg-red-50 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                    </div>
+                </div>`;
+            }).join('')}
+            </div><div class="p-4 border-t border-brand-border bg-brand-item"><div class="flex items-center gap-3 bg-black/5 rounded-2xl px-4 py-3 border border-transparent focus-within:border-brand-primary focus-within:bg-brand-item focus-within:shadow-md transition-all"><i data-lucide="plus" class="w-5 h-5 text-brand-muted"></i><input type="text" placeholder="Añadir tarea..." class="flex-1 bg-transparent text-sm font-medium outline-none text-brand-text placeholder-brand-muted" onkeydown="if(event.key==='Enter') addStudyTask(this)"></div></div></div><div class="bg-amber-50/30 border border-amber-100 rounded-3xl shadow-sm flex flex-col h-96 overflow-hidden"><div class="p-5 border-b border-amber-100/50 font-bold text-amber-900 flex gap-3 items-center bg-amber-50/50"><i data-lucide="book-open" class="w-5 h-5 text-amber-600"></i> Apuntes</div><div class="p-5 grid grid-cols-2 gap-4 overflow-y-auto custom-scrollbar"><div onclick="addNotePrompt()" class="border-2 border-dashed border-amber-200/60 rounded-2xl flex flex-col items-center justify-center text-amber-400 cursor-pointer hover:bg-amber-50 hover:border-amber-300 hover:text-amber-600 transition-all h-36 bg-white/60"><i data-lucide="plus" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Nueva Nota</span></div>${notesList.map(n => `<div class="bg-white p-4 rounded-2xl shadow-sm border border-amber-100/50 text-xs h-36 overflow-hidden relative group hover:shadow-lg transition-all hover:-translate-y-1"><h4 class="font-bold text-gray-800 mb-2 truncate text-sm border-b border-gray-50 pb-2">${n.title}</h4><p class="text-gray-500 leading-relaxed line-clamp-4">${n.content}</p><button onclick="deleteNote(${n.id})" class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`).join('')}</div></div></div></div>`;
         }
 
         // --- NEW MODAL & EDIT FUNCTIONS ---
@@ -1161,6 +1455,11 @@
             document.getElementById('subCycleInput').value = sub.cycle;
             document.getElementById('subClientInput').value = sub.clientId || '';
             document.getElementById('subDateInput').value = sub.nextPayment || '';
+            
+            // UPDATED: Load status value
+            const statusInput = document.getElementById('subStatusInput');
+            if(statusInput) statusInput.value = sub.status || 'active'; 
+
             document.getElementById('subModalBtn').innerText = 'Guardar Cambios';
         }
 
@@ -1282,6 +1581,8 @@
             }
             if (id === 'subscriptionModal') {
                 const subClientSelect = document.getElementById('subClientInput');
+                const subStatusSelect = document.getElementById('subStatusInput'); // NEW
+
                 if(subClientSelect) {
                     subClientSelect.innerHTML = `<option value="">Seleccionar cliente...</option>` + state.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
                 }
@@ -1294,6 +1595,7 @@
                     document.getElementById('subCycleInput').value = 'monthly';
                     document.getElementById('subDateInput').value = '';
                     if(subClientSelect) subClientSelect.value = '';
+                    if(subStatusSelect) subStatusSelect.value = 'active'; // Default active
                     document.getElementById('subModalBtn').innerText = 'Guardar';
                 }
             }
@@ -1305,6 +1607,7 @@
             if(id === 'taskModal') {
                 document.getElementById('newTaskInput').value = '';
                 document.getElementById('newTaskDesc').value = '';
+                document.getElementById('newTaskDuration').value = ''; // Clear duration
                 state.editingTaskId = null;
             }
             if(id === 'projectModal') {
@@ -1424,6 +1727,7 @@
             const cycle = document.getElementById('subCycleInput').value;
             const clientId = document.getElementById('subClientInput').value;
             const date = document.getElementById('subDateInput').value;
+            const status = document.getElementById('subStatusInput').value; // NEW
             
             if(!name || !price) return;
             
@@ -1432,14 +1736,16 @@
                 if(index !== -1) {
                     state.subscriptions[index] = { 
                         ...state.subscriptions[index],
-                        name, desc, price, cycle, clientId, nextPayment: date, alerted: false 
+                        name, desc, price, cycle, clientId, status, // Added Status
+                        nextPayment: date, alerted: false 
                     };
                     showToast('Suscripción actualizada');
                 }
             } else {
                 state.subscriptions.push({
                     id: Date.now().toString(),
-                    name, desc, price, cycle, clientId, nextPayment: date, alerted: false
+                    name, desc, price, cycle, clientId, status, // Added Status
+                    nextPayment: date, alerted: false
                 });
                 showToast('Suscripción guardada');
             }
@@ -1553,6 +1859,7 @@
             if(document.getElementById('newTaskAssignee')) {
                 document.getElementById('newTaskAssignee').value = task.assignedTo || "";
             }
+            document.getElementById('newTaskDuration').value = task.duration || ''; // Load Duration
             document.getElementById('taskModalBtn').innerHTML = 'Guardar Cambios <i data-lucide="check" class="w-4 h-4"></i>';
         }
 
@@ -1564,6 +1871,7 @@
             const dateInput = document.getElementById('newTaskDate');
             const textInput = document.getElementById('newTaskInput');
             const projectSelect = document.getElementById('newTaskProject');
+            document.getElementById('newTaskDuration').value = ''; // Reset duration
 
             if (dateStr) dateInput.value = `${dateStr}T09:00`; else dateInput.value = '';
             if (initialText) textInput.value = initialText;
@@ -1588,11 +1896,14 @@
             const prioInput = document.getElementById('newTaskPriority');
             const priority = prioInput ? (parseInt(prioInput.value) || 4) : 4;
             const assignedTo = document.getElementById('newTaskAssignee') ? document.getElementById('newTaskAssignee').value : null;
+            const duration = document.getElementById('newTaskDuration').value; // Get duration
 
             // Get date from datetime-local
             let dateVal = document.getElementById('newTaskDate').value;
             // If date is empty but we are in 'today' view, default to today's date
             if(!dateVal && state.view === 'today') dateVal = new Date().toISOString().split('T')[0];
+
+            let savedTask = null;
 
             if (state.editingTaskId) {
                 // Update existing
@@ -1605,26 +1916,36 @@
                         date: dateVal, 
                         priority, 
                         assignedTo,
+                        duration: duration ? parseInt(duration) : null,
                         projectId: document.getElementById('newTaskProject').value || 'inbox' 
                     };
+                    savedTask = state.tasks[taskIndex];
                     showToast('Tarea actualizada ✨');
                 }
             } else {
                 // Create new
-                state.tasks.push({ 
+                savedTask = { 
                     id: Date.now(), 
                     content, 
                     description: document.getElementById('newTaskDesc').value, 
                     date: dateVal, 
                     priority: priority, 
                     assignedTo,
+                    duration: duration ? parseInt(duration) : null,
                     projectId: document.getElementById('newTaskProject').value || 'inbox', 
                     completed: false 
-                });
+                };
+                state.tasks.push(savedTask);
                 showToast('Tarea creada ✨');
             }
             
             saveData('tasks'); 
+            
+            // Try to send email if configured
+            if (state.userEmail && savedTask) {
+                sendTaskEmail(savedTask);
+            }
+
             closeModal('taskModal');
         }
 
@@ -1639,7 +1960,21 @@
             `).join('');
         }
         
-        function addStudyTask(i) { if(!i.value.trim()) return; state.tasks.push({id: Date.now(), content: i.value, projectId: 'studies', completed: false, date: new Date().toISOString().split('T')[0]}); i.value=''; saveData('tasks'); showToast('Tarea estudio añadida'); renderMain(); }
+        function addStudyTask(i) { 
+            if(!i.value.trim()) return; 
+            state.tasks.push({
+                id: Date.now(), 
+                content: i.value, 
+                projectId: 'studies', 
+                completed: false, 
+                date: new Date().toISOString().split('T')[0],
+                priority: 3 // Default priority Normal
+            }); 
+            i.value=''; 
+            saveData('tasks'); 
+            showToast('Tarea estudio añadida'); 
+            renderMain(); 
+        }
         
         function addNotePrompt() { 
             showInputPrompt("Título de la nota", (title) => {
@@ -1673,7 +2008,7 @@
         function changeMonth(d) { state.calendarDate.setMonth(state.calendarDate.getMonth() + d); renderMain(); }
         function resetMonth() { state.calendarDate = new Date(); renderMain(); }
         function addQuickTask(val) { if(!val.trim()) return; openAddTaskModal(null, val); }
-        function toggleTask(id) { const t = state.tasks.find(t => t.id === id); if(t) { t.completed = !t.completed; saveData('tasks'); if(t.completed) showToast('¡Tarea completada! 💪'); } }
+        function toggleTask(id) { const t = state.tasks.find(t => t.id === id); if(t) { t.completed = !t.completed; saveData('tasks'); if(t.completed) showToast('¡Tarea completada! 💪'); renderMain(); } } // Añadido renderMain para refrescar vista
         
         function deleteTask(id) { 
             showConfirm('¿Eliminar esta tarea?', (confirmed) => {
